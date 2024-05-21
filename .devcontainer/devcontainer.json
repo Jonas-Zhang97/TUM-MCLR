@@ -1,0 +1,51 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+{
+	"name": "MCLR Dev Container",
+	"dockerFile": "Dockerfile",
+	"containerUser": "developer",
+	"containerEnv" : {
+		"DISPLAY" : "${localEnv:DISPLAY}",
+		"QT_X11_NO_MITSHM" : "1",
+		"SHELL": "/bin/bash"
+	},
+	"remoteEnv": { 
+		"DISPLAY": "${localEnv:DISPLAY}"
+	},
+
+	"features": {
+		"ghcr.io/devcontainers/features/python:1": {}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-iot.vscode-ros"
+			],
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "/bin/bash"
+					}
+				}
+			}
+		}
+	}
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Uncomment the next line to run commands after the container is created.
+	// "postCreateCommand": "cat /etc/os-release",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "devcontainer"
+}

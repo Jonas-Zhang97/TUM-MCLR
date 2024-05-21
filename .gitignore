@@ -1,0 +1,5 @@
+.github
+mclr_ws/build
+mclr_ws/devel
+mclr_ws/logs
+mclr_ws/src/.vscode
