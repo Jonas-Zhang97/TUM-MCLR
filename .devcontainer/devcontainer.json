@@ -5,16 +5,9 @@
 	"dockerFile": "Dockerfile",
 	"containerUser": "developer",
 	"containerEnv" : {
-		"DISPLAY" : "${localEnv:DISPLAY}",
+		"DISPLAY" : "unix:0",
 		"QT_X11_NO_MITSHM" : "1",
 		"SHELL": "/bin/bash"
-	},
-	"remoteEnv": { 
-		"DISPLAY": "${localEnv:DISPLAY}"
-	},
-
-	"features": {
-		"ghcr.io/devcontainers/features/python:1": {}
 	},
 
 	"customizations": {
@@ -32,7 +25,17 @@
 				}
 			}
 		}
-	}
+	},
+	
+	"runArgs": [
+		// "--network=host",
+		"--privileged"
+		// "--gpus=all",
+	],
+
+	"mounts": [
+		"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
+	]
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

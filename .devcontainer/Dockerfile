@@ -25,6 +25,7 @@ RUN echo 'Etc/UTC' > /etc/timezone && \
 # install develop packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
   git \
+  net-tools \
   openssl \
   curl \
   wget \
@@ -85,3 +86,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
   && chmod 0440 /etc/sudoers.d/$USERNAME
 
 USER $USERNAME
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+RUN mkdir -p /home/developer/Downloads/openssl/ssl \
+  && sudo cp -r /etc/ssl/* /home/developer/Downloads/openssl/ssl/ \
+  && rosdep update
