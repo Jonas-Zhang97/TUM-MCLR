@@ -164,6 +164,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/t11.py
   scripts/t12.py
+  scripts/t12_l.py
   scripts/t13.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -181,10 +181,11 @@ def main(args):
   # tfBuffer = tf2_ros.Buffer()
   # listener = tf2_ros.TransformListener(tfBuffer)
 
-  marker_pub = rospy.Publisher('visualization_marker', Marker, queue_size=10)
+  marker_pub = rospy.Publisher('vis_marker', Marker, queue_size=10)
 
   corners = initCage()
 
+  # NOTE: TWIST DEFINED AND PROCESSED
   # define twist in world frame
   world_twist = np.array([0.06, 0.0, 0.0, 0.1, 0.0, 0.1])
   # convert twist to local frame
@@ -192,6 +193,7 @@ def main(args):
   # generate a pin motion from twist
   exp6_mot = pin.exp6(pin.Motion(local_twist))
 
+  # NOTE: MARKER DEFINED
   # assume the marker pose is in the 5th corner frame
   # format for marker pose: [x, y, z, r, p, y, w]
   marker_pose_corner = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
@@ -201,18 +203,26 @@ def main(args):
   rate = 10
   loop_rate = rospy.Rate(rate)
   while not rospy.is_shutdown():
-    # publish transform from world to cage center
+    # NOTE: UNCOMMENT TO PUBLISH STATIC CAGE
     # publishCage(brodcaster)
+    
+    # NOTE: UNCOMMENT ANYONE TO PUBLISH MOVING CAGE BY UPDATING CENTER
+    # pinocchio approach for E1.7
     corners[0] = updateCageCenterPIN(corners[0], exp6_mot)
+    # formula approach for E1.7
     # corners[0] = updateCageCenterTwist(corners[0], local_twist, rate)
+    
     publishCageAsPIN(broadcaster, corners)
+    
+    # get transform from world to 5th corner and spawn marker
     try:
       (trans_world, quat_world) = listener.lookupTransform('world', 'o_5', rospy.Time(0))
+      # NOTE: CONVERT MARKER POSE TO WORLD FRAME FOR E1.9
       marker_pose_world = convertToWorld(marker_pose_corner, trans_world, quat_world)
       spawnMarker(marker_pose_world, [0, 1, 0], "world", marker_pub)
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-      # print("nothing")
       continue
+    # NOTE: SPAWN MARKER IN 5TH CORNER FRAME FOR E1.8
     spawnMarker(marker_pose_corner, [1, 0, 0], "o_5", marker_pub)
     loop_rate.sleep()
   return 0
