@@ -50,17 +50,14 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>reemc_description</build_depend>
-  <build_depend>eigenpy</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>simulator</build_depend>
   <build_depend>talos_description</build_depend>
   <build_export_depend>reem_description</build_export_depend>
-  <build_export_depend>eigenpy</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>simulator</build_export_depend>
   <build_export_depend>talos_description</build_export_depend>
   <exec_depend>reemc_description</exec_depend>
-  <exec_depend>eigenpy</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>simulator</exec_depend>
   <exec_depend>talos_description</exec_depend>

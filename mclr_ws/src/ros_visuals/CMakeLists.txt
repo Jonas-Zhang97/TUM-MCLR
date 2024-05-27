@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(bullet_sims)
+project(ros_visuals)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,11 +8,11 @@ project(bullet_sims)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  reemc_description
+  geometry_msgs
+  roscpp
   rospy
-  simulator
-  talos_description
-  eigenpy
+  std_msgs
+  visualization_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -72,7 +72,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
+#   geometry_msgs#   std_msgs#   visualization_msgs
 # )
 
 ################################################
@@ -106,8 +106,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES bullet_sims
-#  CATKIN_DEPENDS reem_description rospy simulator talos_description
+#  LIBRARIES ros_visuals
+#  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs visualization_msgs
 #  DEPENDS system_lib
 )
 
@@ -124,7 +124,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/bullet_sims.cpp
+#   src/${PROJECT_NAME}/ros_visuals.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -135,7 +135,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/bullet_sims_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/ros_visuals_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -162,7 +162,9 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/t2_temp.py
+  scripts/t11.py
+  scripts/t12.py
+  scripts/t13.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -199,7 +201,7 @@ catkin_install_python(PROGRAMS
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_bullet_sims.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_ros_visuals.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

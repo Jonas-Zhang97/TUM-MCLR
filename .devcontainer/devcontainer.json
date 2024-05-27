@@ -1,20 +1,18 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
-	"name": "MCLR Dev Container",
+	"name": "mclr-devcontainer",
 	"dockerFile": "Dockerfile",
 	"containerUser": "developer",
 	"containerEnv": {
-		"DISPLAY": "unix:0",
+		"DISPLAY": "${localEnv:DISPLAY}",
 		"QT_X11_NO_MITSHM": "1",
 		"SHELL": "/bin/bash"
 	},
+	"remoteEnv": {
+		"DISPLAY": "${localEnv:DISPLAY}"
+	},
+
 	"customizations": {
 		"vscode": {
-			"extensions": [
-				"ms-python.python",
-				"ms-iot.vscode-ros"
-			],
 			"settings": {
 				"terminal.integrated.defaultProfile.linux": "bash",
 				"terminal.integrated.profiles.linux": {
@@ -28,17 +26,36 @@
 	"runArgs": [
 		// "--runtime=nvidia",
 		"--network=host",
-		// "--privileged"
-		// "--gpus=all",
+		//"--privileged",
+		// "--gpus=all"
 	],
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "cat /etc/os-release",
-	// Configure tool-specific properties.
-	// "customizations": {},
-	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "devcontainer"
+	// "mounts": [
+	// 	{
+	// 		"source": "/dev/dri",
+	// 		"target": "/dev/dri",
+	// 		"type": "bind"
+	// 	},
+	// 	{
+	// 		"source": "/tmp/.X11-unix",
+	// 		"target": "/tmp/.X11-unix",
+	// 		"type": "bind"
+	// 	},
+	// 	{
+	// 		"source": "/etc/machine-id",
+	// 		"target": "/etc/machine-id",
+	// 		"type": "bind"
+	// 	}
+	// 	//{ 
+	// 	//	"source": "/dev", 
+	// 	//	"target": "/dev",
+	// 	//	"type": "bind"
+	// 	//}
+	// 	// ,
+	// 	// { 
+	// 	// 	"source": "/home/${localEnv:USER}/scripts", 
+	// 	// 	"target": "/scripts",
+	// 	// 	"type": "bind"
+	// 	// }
+	// ]
+
 }
