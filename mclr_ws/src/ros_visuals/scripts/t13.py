@@ -7,10 +7,8 @@ import rospy
 # numpy
 import numpy as np
 # tf
-import tf2_ros
 import tf
 from tf.transformations import euler_from_matrix as mat2eul
-from tf.transformations import quaternion_matrix as quat2mat
 from tf.transformations import euler_from_quaternion as quat2eul
 # pinocchio
 import pinocchio as pin
@@ -148,14 +146,27 @@ def spawnMarker(marker_pose, marker_rgb, ref_frame, marker_pub):
   
   return 0
 
+def convertMarkerFromCenterToWorld(marker_pose_world, exp6_mot):
+  # convert marker pose into se3 object
+  rot_eul = quat2eul(marker_pose_world[3:])
+  rot_mat = pin.utils.rpyToMatrix(rot_eul[0], rot_eul[1], rot_eul[2])
+  tran_vec = np.array(marker_pose_world[0:3])
+  marker_pose_se3 = pin.SE3(rot_mat, tran_vec)
+  # convert marker pose from corner to world
+  marker_pose_world = marker_pose_se3.act(exp6_mot)
+  # convert rotation to quaternion
+  rot_eul = mat2eul(marker_pose_world.rotation)
+  # convert to marker pose
+  marker_pose_world = [marker_pose_world.translation[0], marker_pose_world.translation[1], marker_pose_world.translation[2], 
+                       pin.Quaternion(marker_pose_world.rotation).coeffs()[0], pin.Quaternion(marker_pose_world.rotation).coeffs()[1], pin.Quaternion(marker_pose_world.rotation).coeffs()[2], pin.Quaternion(marker_pose_world.rotation).coeffs()[3]]
+  return marker_pose_world
+
+
 def main(args):
   # init node
   initNode()
   broadcaster = tf.TransformBroadcaster()
-  # listener = tf.TransformListener()
-  tfBuffer = tf2_ros.Buffer()
-  listener = tf2_ros.TransformListener(tfBuffer)
-
+  listener = tf.TransformListener()
   marker_pub = rospy.Publisher('visualization_marker', Marker, queue_size=10)
 
   corners = initCage()
@@ -167,9 +178,8 @@ def main(args):
   # generate a pin motion from twist
   exp6_mot = pin.exp6(pin.Motion(local_twist))
 
-  # assume the marker pose is in the 5th corner frame
-  # format for marker pose: [x, y, z, r, p, y, w]
   marker_pose_corner = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+  marker_pose_world = marker_pose_corner
   
   # define updating rate
   rospy.loginfo('publishing cage tf...')
@@ -182,6 +192,8 @@ def main(args):
     # corners[0] = updateCageCenterTwist(corners[0], local_twist, rate)
     publishCageAsPIN(broadcaster, corners)
     spawnMarker(marker_pose_corner, [1, 0, 0], "o_5", marker_pub)
+    marker_pose_world = convertMarkerFromCenterToWorld(marker_pose_world, exp6_mot)
+    spawnMarker(marker_pose_world, [0, 1, 0], "world", marker_pub)
     loop_rate.sleep()
   return 0
 

@@ -163,6 +163,9 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/t11.py
+  scripts/t12.py
+  scripts/t13.py
+  scripts/t11_l.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
