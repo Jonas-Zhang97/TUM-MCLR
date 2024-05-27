@@ -13,7 +13,7 @@ sudo sh -c "echo 'deb [arch=amd64] http://robotpkg.openrobots.org/packages/debia
 Register the authentication certificate of robopkg
 
 ```bash
-sudo apt-get update
+curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add -
 ```
 
 Then update apt to fetch
@@ -23,9 +23,7 @@ sudo apt-get update
 ```
 
 ```bash
-sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba
-sudo apt-get install python-gi-cairo
-sudo apt install robotpkg-py38-example-robot-data
+sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba python-gi-cairo robotpkg-py38-example-robot-data
 ```
 
 ## Links

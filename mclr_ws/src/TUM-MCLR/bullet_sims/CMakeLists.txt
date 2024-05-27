@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   simulator
   talos_description
-  eigenpy
 )
 
 ## System dependencies are found with CMake's conventions

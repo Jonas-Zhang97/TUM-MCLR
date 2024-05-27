@@ -1,9 +1,14 @@
+#!/bin/python3
 """simulator
 Robot base class (connection pybullet & pinocchio)
 Author: Simon Armleder
 """
 import numpy as np
 import pybullet as pb
+import sys
+import ctypes
+ctypes.CDLL('/opt/openrobots/lib/libeigenpy.so')
+print(sys.path)
 
 import eigenpy as ei
 import pinocchio as pin

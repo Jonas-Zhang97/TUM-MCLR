@@ -1,3 +1,6 @@
+#!/bin/python3
+import os
+import sys
 import pybullet as pb
 import numpy as np
 from simulator.pybullet_wrapper import PybulletWrapper
