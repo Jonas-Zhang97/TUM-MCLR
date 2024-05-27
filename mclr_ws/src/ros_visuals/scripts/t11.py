@@ -111,27 +111,39 @@ def publishCageAsPIN(broadcaster, corners):
 
 def spawnMarker(marker_pub):
   marker = Marker()
+
   marker.header.frame_id = "o_5"
   marker.header.stamp = rospy.Time.now()
+  
   marker.id = Marker.CUBE
+  
   marker.type = 0
+  
   marker.action = Marker.ADD
+  
   marker.pose.position.x = 0
   marker.pose.position.y = 0
   marker.pose.position.z = 1
+  
   marker.pose.orientation.x = 0.0
   marker.pose.orientation.y = 0.0
   marker.pose.orientation.z = 0.0
   marker.pose.orientation.w = 1.0
+  
   marker.scale.x = 0.1
   marker.scale.y = 0.01
   marker.scale.z = 0.05
+  
   marker.color.a = 1.0
   marker.color.r = 0.2
   marker.color.g = 0.3
   marker.color.b = 0.5
+  
   marker.lifetime = rospy.Duration()
+  
   marker_pub.publish(marker)
+  
+  return 0
 
 def main(args):
   # init node
