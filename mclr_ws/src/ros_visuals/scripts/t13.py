@@ -18,6 +18,7 @@ import pinocchio as pin
 
 from geometry_msgs.msg import TwistStamped
 from visualization_msgs.msg import Marker
+from geometry_msgs.msg import WrenchStamped
 
 def initNode():
   rospy.init_node('t12')
@@ -156,19 +157,34 @@ def applyTwistInFrame(motion, corner_id, corners):
     corners[0] = corners[0].act(exp6_mot_0)
   return corners
 
-def publishTwist(motion, frame_id, twist_pub):
+def convertWrenchFrame(wrench, corner_id, corners):
+  '''
+  args:
+    wrench: pin.Force object, wrench in the an desired frame
+    corner_id: int, id of the corner frame where the wrench is applied, -1 stands for world frame
+    corners: list of SE3 objects, corners of the cage
+  '''
+  if corner_id == 0:
+    wrench_0 =  corners[corner_id] * wrench
+  elif corner_id == -1:
+    wrench_0 = wrench
+  else:
+    wrench_0 = corners[0] * corners[corner_id] *  wrench
+  return wrench_0
+
+def publishWrench(wrench, frame_id, wrench_pub):
   # Create a TwistStamped message and fill in its values
-  msg = TwistStamped()
+  msg = WrenchStamped()
   msg.header.frame_id = frame_id
   msg.header.stamp = rospy.Time.now()
-  msg.twist.angular.x = motion.angular[0]
-  msg.twist.angular.y = motion.angular[1]
-  msg.twist.angular.z = motion.angular[2]
-  msg.twist.linear.x = motion.linear[0]
-  msg.twist.linear.y = motion.linear[1]
-  msg.twist.linear.z = motion.linear[2]
-  # publish the twist
-  twist_pub.publish(msg)
+  msg.wrench.force.x = wrench.linear[0]
+  msg.wrench.force.y = wrench.linear[1]
+  msg.wrench.force.z = wrench.linear[2]
+  msg.wrench.torque.x = wrench.angular[0]
+  msg.wrench.torque.y = wrench.angular[1]
+  msg.wrench.torque.z = wrench.angular[2]
+
+  wrench_pub.publish(msg)
 
   return 0
 
@@ -179,9 +195,9 @@ def main(args):
   broadcaster = tf.TransformBroadcaster()
   listener = tf.TransformListener()
 
-  o_0_twist_pub = rospy.Publisher('/twist_o_0', TwistStamped, queue_size=10)
-  o_w_twist_pub = rospy.Publisher('/twist_world', TwistStamped, queue_size=10)
-  o_5_twist_pub = rospy.Publisher('/twist_o_5', TwistStamped, queue_size=10)
+  o_0_wrench_pub = rospy.Publisher('/wrench_o_0', WrenchStamped, queue_size=10)
+  o_w_wrench_pub = rospy.Publisher('/wrench_world', WrenchStamped, queue_size=10)
+  o_5_wrench_pub = rospy.Publisher('/wrench_o_5', WrenchStamped, queue_size=10)
   # tfBuffer = tf2_ros.Buffer()
   # listener = tf2_ros.TransformListener(tfBuffer)
 
@@ -198,6 +214,9 @@ def main(args):
   twist = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.01])
   # convert twist to motion
   motion = pin.Motion(twist)
+
+  force_torque = np.array([0.0, 0.0, 0.01, 0.0, 0.0, 0.01])
+  wrench_w = pin.Force(force_torque)
   
   # define updating rate
   rospy.loginfo('publishing cage tf...')
@@ -212,9 +231,12 @@ def main(args):
     # treat the twist as a motion in the corner 5 frame
     corners = applyTwistInFrame(motion, 5, corners)
     # publish the cage
-    publishTwist(motion, 'world', o_w_twist_pub)
-    publishTwist(motion, 'o_0', o_0_twist_pub)
-    publishTwist(motion, 'o_5', o_5_twist_pub)
+    # publishTwist(motion, 'world', o_w_twist_pub)
+    wrench_0 = convertWrenchFrame(wrench_w, 0, corners)
+    wrench_5 = convertWrenchFrame(wrench_w, 5, corners)
+    publishWrench(wrench_w, 'world', o_w_wrench_pub)
+    publishWrench(wrench_0, 'o_0', o_0_wrench_pub)
+    publishWrench(wrench_5, 'o_5', o_5_wrench_pub)
     publishCageAsPIN(broadcaster, corners, o_ref="o_0")
     loop_rate.sleep()
   return 0

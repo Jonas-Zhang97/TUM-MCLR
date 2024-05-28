@@ -27,14 +27,7 @@ def initNode():
   
   return 0
 
-def initCage():
-# def the center of the cage
-  o0_t = np.array([0.5, 0.0, 1])
-  o0_r = pin.utils.rpyToMatrix(0.0, 3.14/4, 0.0)
-  # convert cage center to SE3 object
-  o0_M = pin.SE3(o0_r, o0_t)
-
-
+def genCage(center_M):
 
   # def the relative poses of the corners
   # translations
@@ -61,7 +54,7 @@ def initCage():
   ]
   # construct the cage corners as SE3 objects
   
-  corners = [o0_M]
+  corners = [center_M]
   for corner_id in range(8):
     # get the translation and euler angles
     corner_t = np.array(corner_tran[corner_id])
@@ -181,13 +174,18 @@ def main(args):
   # tfBuffer = tf2_ros.Buffer()
   # listener = tf2_ros.TransformListener(tfBuffer)
 
-  marker_pub = rospy.Publisher('vis_marker', Marker, queue_size=10)
+  marker_1_pub = rospy.Publisher('/vis_marker_1', Marker, queue_size=10)
+  marker_2_pub = rospy.Publisher('/vis_marker_2', Marker, queue_size=10)
 
-  corners = initCage()
+  center = np.array([1.0, 0.0, 1.0])
+  center_euler = np.array([0.0, 0.0, 0.0])
+  center_M = pin.SE3(pin.utils.rpyToMatrix(center_euler[0], center_euler[1], center_euler[2]), center)
+
+  corners = genCage(center_M)
 
   # NOTE: TWIST DEFINED AND PROCESSED
   # define twist in world frame
-  world_twist = np.array([0.06, 0.0, 0.0, 0.1, 0.0, 0.1])
+  world_twist = np.array([0.01, 0.0, 0.0, 0.01, 0.0, 0.01])
   # convert twist to local frame
   local_twist = corners[0].actInv(pin.Motion(world_twist)).vector
   # generate a pin motion from twist
@@ -196,7 +194,7 @@ def main(args):
   # NOTE: MARKER DEFINED
   # assume the marker pose is in the 5th corner frame
   # format for marker pose: [x, y, z, r, p, y, w]
-  marker_pose_corner = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+  marker_pose_corner = [0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.01]
   
   # define updating rate
   rospy.loginfo('publishing cage tf...')
@@ -219,11 +217,11 @@ def main(args):
       (trans_world, quat_world) = listener.lookupTransform('world', 'o_5', rospy.Time(0))
       # NOTE: CONVERT MARKER POSE TO WORLD FRAME FOR E1.9
       marker_pose_world = convertToWorld(marker_pose_corner, trans_world, quat_world)
-      spawnMarker(marker_pose_world, [0, 1, 0], "world", marker_pub)
+      spawnMarker(marker_pose_world, [0, 1, 0], "world", marker_2_pub)
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
       continue
     # NOTE: SPAWN MARKER IN 5TH CORNER FRAME FOR E1.8
-    spawnMarker(marker_pose_corner, [1, 0, 0], "o_5", marker_pub)
+    spawnMarker(marker_pose_corner, [1, 0, 0], "o_5", marker_1_pub)
     loop_rate.sleep()
   return 0
 
