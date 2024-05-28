@@ -20,12 +20,9 @@ from geometry_msgs.msg import TwistStamped
 from visualization_msgs.msg import Marker
 
 def initNode():
-  rospy.init_node('t11')
-  rospy.loginfo('t11 node started')
+  rospy.init_node('t12')
+  rospy.loginfo('t12 node started')
 
-  # init listener and broadcaster
-  
-  
   return 0
 
 def initCage():
@@ -74,9 +71,9 @@ def initCage():
   return corners
 
 
-def updateCageCenterPIN(o0_M, exp6_mot):
-  o0_M = o0_M.act(exp6_mot)
-  return o0_M 
+def updateCageCenterPIN(o_M, exp6_mot):
+  o_M = o_M.act(exp6_mot)
+  return o_M 
 
 
 def updateCageCenterTwist(o0_M, twist, rate):
@@ -104,30 +101,45 @@ def updateCageCenterTwist(o0_M, twist, rate):
   return pin.SE3(T)
 
 
-def publishCageAsPIN(broadcaster, corners):
+def publishCageAsPIN(broadcaster, corners, o_ref):
   for corner_id, corner in enumerate(corners):
     corner_name = "o_" + str(corner_id)
-    if corner_id == 0:
+    if corner_name == o_ref:
       broadcaster.sendTransform(corner.translation, pin.Quaternion(corner.rotation).coeffs(), rospy.Time.now(), corner_name, 'world')
     else:
-      broadcaster.sendTransform(corner.translation, pin.Quaternion(corner.rotation).coeffs(), rospy.Time.now(), corner_name, "o_0")
+      broadcaster.sendTransform(corner.translation, pin.Quaternion(corner.rotation).coeffs(), rospy.Time.now(), corner_name, o_ref)
   return 0
 
-def convertTwistRefFrame(twist, ref_frame_name, listener):
+def convertTwistRefFrame(twist, trans, quat):
   """
   args:
-    twist: numpy array of shape (6,)
-    ref_frame_name: string
+    twist: numpy array of shape (6,), twist in current frame
+    trans: numpy array of shape (3,), translation of the reference frame
+    quat: numpy array of shape (4,), quaternion of the reference frame
   output:
     twist_ref: numpy array of shape (6,)
   """
-  # get transformation matrix from ref_frame_name to world
-  try:
-    listener.lookupTransform('world', ref_frame_name, rospy.Time(0))
-  except:
-    rospy.logerr('transformation temporarily unavailable')
+  # define basic mathmatic operations
+  def skew(v):
+    return np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+  
+  def constructAdT(T):
+    AdT = np.zeros((6, 6))
+    AdT[0:3, 0:3] = T[0:3, 0:3]
+    AdT[3:6, 3:6] = T[0:3, 0:3]
+    AdT[3:6, 0:3] = np.dot(skew(T[0:3, 3]), T[0:3, 0:3])
+    return AdT
+  
+  def constructT(trans, quat):
+    T = quat2mat(quat)
+    T[0:3, 3] = trans
+    return T
+  
+  T = constructT(trans, quat)
+  AdT = constructAdT(T)
+  twist_ref = np.dot(AdT, twist)
 
-  return 0
+  return twist_ref
 
 def convertTwist(twist):
   # convert twist into form (linear, quaternion)
@@ -182,8 +194,11 @@ def main(args):
 
   corners = initCage()
 
+  # init publish
+  publishCageAsPIN(broadcaster, corners, o_ref="o_0")
+
   # define twist in world frame
-  world_twist = np.array([0.01, 0.0, 0.0, 0.0, 0.0, 0.0])
+  world_twist = np.array([0.0, 0.0, 0.0, 0.01, 0.0, 0.0])
   # convert twist to local frame, i.e. corner 5
   local_twist = corners[5].actInv(pin.Motion(world_twist)).vector
   # generate a pin motion from twist
@@ -196,12 +211,13 @@ def main(args):
   while not rospy.is_shutdown():
     # publish transform from world to cage center
     # publishCage(brodcaster)
-    corners[0] = updateCageCenterPIN(corners[0], exp6_mot)
+    corners[5] = updateCageCenterPIN(corners[5], exp6_mot)
     # corners[0] = updateCageCenterTwist(corners[0], local_twist, rate)
-    publishCageAsPIN(broadcaster, corners)
-    publishTwist(local_twist, 'o_5', twist_pub)
+    publishCageAsPIN(broadcaster, corners, o_ref="o_5")
     try:
-      (trans_world, quat_world) = listener.lookupTransform('world', 'o_5', rospy.Time(0))
+      (trans_world, quat_world) = listener.lookupTransform('o_5', 'world', rospy.Time(0))
+      # twist_world = convertTwistRefFrame(local_twist, trans_world, quat_world)
+      # exp6_mot = pin.exp6(pin.Motion(twist_world))
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
       # print("nothing")
       continue
