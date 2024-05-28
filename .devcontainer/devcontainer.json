@@ -10,6 +10,7 @@
 	"remoteEnv": {
 		"DISPLAY": "${localEnv:DISPLAY}"
 	},
+
 	"customizations": {
 		"vscode": {
 			"settings": {
@@ -56,4 +57,5 @@
 	// 	// 	"type": "bind"
 	// 	// }
 	// ]
+
 }

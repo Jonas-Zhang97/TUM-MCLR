@@ -2,7 +2,8 @@
 
 ##### Stage 1: Base Image #####
 
-ARG BaseImage=nvidia/cudagl:11.2.2-base-ubuntu20.04
+
+ARG BaseImage=nvidia/cuda:12.2.2-base-ubuntu20.04
 FROM $BaseImage as base
 
 LABEL MAINTAINER="yueyang.zhang@tum.de"
@@ -31,6 +32,7 @@ RUN echo 'Etc/UTC' > /etc/timezone && \
 
 # install develop packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
+  mlocate \
   git \
   net-tools \
   openssl \
@@ -111,6 +113,7 @@ RUN sudo mkdir -p /home/$USERNAME/Downloads/openssl/ssl \
   && rosdep update
 
 ##### Stage 4: Development Environment #####
+FROM user as deps
 RUN  sudo apt install -qqy lsb-release curl
 
 RUN sudo mkdir -p /etc/apt/keyrings
