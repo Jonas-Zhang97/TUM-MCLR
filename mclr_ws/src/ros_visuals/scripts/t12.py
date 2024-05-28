@@ -25,14 +25,7 @@ def initNode():
 
   return 0
 
-def initCage():
-# def the center of the cage
-  o0_t = np.array([0.5, 0.0, 1])
-  o0_r = pin.utils.rpyToMatrix(0.0, 3.14/4, 0.0)
-  # convert cage center to SE3 object
-  o0_M = pin.SE3(o0_r, o0_t)
-
-
+def genCage(center_M):
 
   # def the relative poses of the corners
   # translations
@@ -59,7 +52,7 @@ def initCage():
   ]
   # construct the cage corners as SE3 objects
   
-  corners = [o0_M]
+  corners = [center_M]
   for corner_id in range(8):
     # get the translation and euler angles
     corner_t = np.array(corner_tran[corner_id])
@@ -192,7 +185,11 @@ def main(args):
   # tfBuffer = tf2_ros.Buffer()
   # listener = tf2_ros.TransformListener(tfBuffer)
 
-  corners = initCage()
+  center = np.array([1.0, 0.0, 1.0])
+  center_euler = np.array([0.0, 0.0, 0.0])
+  center_M = pin.SE3(pin.utils.rpyToMatrix(center_euler[0], center_euler[1], center_euler[2]), center)
+
+  corners = genCage(center_M)
 
   # init publish
   publishCageAsPIN(broadcaster, corners, o_ref="o_0")
@@ -200,7 +197,7 @@ def main(args):
   # define twist in world frame
   world_twist = np.array([0.0, 0.0, 0.0, 0.01, 0.0, 0.0])
   # convert twist to local frame, i.e. corner 5
-  local_twist = corners[5].actInv(pin.Motion(world_twist)).vector
+  local_twist = corners[0].actInv(pin.Motion(world_twist)).vector
   # generate a pin motion from twist
   exp6_mot = pin.exp6(pin.Motion(local_twist))
   
@@ -211,9 +208,9 @@ def main(args):
   while not rospy.is_shutdown():
     # publish transform from world to cage center
     # publishCage(brodcaster)
-    corners[5] = updateCageCenterPIN(corners[5], exp6_mot)
+    corners[0] = updateCageCenterPIN(corners[0], exp6_mot)
     # corners[0] = updateCageCenterTwist(corners[0], local_twist, rate)
-    publishCageAsPIN(broadcaster, corners, o_ref="o_5")
+    publishCageAsPIN(broadcaster, corners, o_ref="o_0")
     try:
       (trans_world, quat_world) = listener.lookupTransform('o_5', 'world', rospy.Time(0))
       # twist_world = convertTwistRefFrame(local_twist, trans_world, quat_world)
