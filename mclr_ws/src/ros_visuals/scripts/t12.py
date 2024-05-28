@@ -161,6 +161,11 @@ def convertMarkerFromCenterToWorld(marker_pose_world, exp6_mot):
                        pin.Quaternion(marker_pose_world.rotation).coeffs()[0], pin.Quaternion(marker_pose_world.rotation).coeffs()[1], pin.Quaternion(marker_pose_world.rotation).coeffs()[2], pin.Quaternion(marker_pose_world.rotation).coeffs()[3]]
   return marker_pose_world
 
+# Exercise 2.2
+def twistTransform(twist, corner_id, corners):
+  # get the twist in local frame
+  local_twist = corners[corner_id].actInv(pin.Motion(twist)).vector
+  return local_twist
 
 def main(args):
   # init node
@@ -172,9 +177,9 @@ def main(args):
   corners = initCage()
 
   # define twist in world frame
-  world_twist = np.array([0.06, 0.0, 0.0, 0.1, 0.0, 0.1])
+  world_twist = np.array([0.01, 0.0, 0.0, 0.0, 0.0, 0.1])
   # convert twist to local frame
-  local_twist = corners[0].actInv(pin.Motion(world_twist)).vector
+  local_twist = twistTransform(world_twist, 3, corners)
   # generate a pin motion from twist
   exp6_mot = pin.exp6(pin.Motion(local_twist))
 
