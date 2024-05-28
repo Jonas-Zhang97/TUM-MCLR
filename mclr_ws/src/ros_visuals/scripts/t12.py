@@ -64,9 +64,11 @@ def genCage(center_M):
   return corners
 
 
-def updateCageCenterPIN(o_M, exp6_mot):
-  o_M = o_M.act(exp6_mot)
-  return o_M 
+def updateCorners(corners, ref_corner_id):
+  for corner_id, corner in enumerate(corners):
+    if corner_id == ref_corner_id:
+      corners[corner_id] = corners[ref_corner_id] * (corners[ref_corner_id].inverse() * corners[corner_id])
+  return corners
 
 
 def updateCageCenterTwist(o0_M, twist, rate):
@@ -134,44 +136,40 @@ def convertTwistRefFrame(twist, trans, quat):
 
   return twist_ref
 
-def convertTwist(twist):
-  # convert twist into form (linear, quaternion)
+def applyTwistInFrame(motion, corner_id, corners):
+  '''
+  args:
+    motion: pin.Motion object, twist in the an desired frame
+    corner_id: int, id of the corner frame where the twist is applied, -1 stands for world frame
+    corners: list of SE3 objects, corners of the cage
+  '''
+  if corner_id == 0:
+    exp6_mot_0 = pin.exp6(motion)
+    corners[0] = corners[0].act(exp6_mot_0)
+  elif corner_id == -1:
+    motion_0 = corners[0].inverse() * motion
+    exp6_mot_0 = pin.exp6(motion_0)
+    corners[0] = corners[0].act(exp6_mot_0)
+  else:
+    motion_0 = corners[corner_id] * motion
+    exp6_mot_0 = pin.exp6(motion_0)
+    corners[0] = corners[0].act(exp6_mot_0)
+  return corners
 
-  return 0
-def spawnMarker(marker_pose, marker_rgb, ref_frame, marker_pub):
-  marker = Marker()
+def publishTwist(motion, frame_id, twist_pub):
+  # Create a TwistStamped message and fill in its values
+  msg = TwistStamped()
+  msg.header.frame_id = frame_id
+  msg.header.stamp = rospy.Time.now()
+  msg.twist.angular.x = motion.angular[0]
+  msg.twist.angular.y = motion.angular[1]
+  msg.twist.angular.z = motion.angular[2]
+  msg.twist.linear.x = motion.linear[0]
+  msg.twist.linear.y = motion.linear[1]
+  msg.twist.linear.z = motion.linear[2]
+  # publish the twist
+  twist_pub.publish(msg)
 
-  marker.header.frame_id = ref_frame
-  marker.header.stamp = rospy.Time.now()
-  
-  marker.id = Marker.CUBE
-  
-  marker.type = 0
-  
-  marker.action = Marker.ADD
-  
-  marker.pose.position.x = marker_pose[0]
-  marker.pose.position.y = marker_pose[1]
-  marker.pose.position.z = marker_pose[2]
-  
-  marker.pose.orientation.x = marker_pose[3]
-  marker.pose.orientation.y = marker_pose[4]
-  marker.pose.orientation.z = marker_pose[5]
-  marker.pose.orientation.w = marker_pose[6]
-  
-  marker.scale.x = 0.1
-  marker.scale.y = 0.01
-  marker.scale.z = 0.05
-  
-  marker.color.a = 1.0
-  marker.color.r = marker_rgb[0]
-  marker.color.g = marker_rgb[1]
-  marker.color.b = marker_rgb[2]
-  
-  marker.lifetime = rospy.Duration()
-  
-  marker_pub.publish(marker)
-  
   return 0
 
 def main(args):
@@ -181,7 +179,9 @@ def main(args):
   broadcaster = tf.TransformBroadcaster()
   listener = tf.TransformListener()
 
-  marker_pub = rospy.Publisher('vis_marker', Marker, queue_size=10)
+  o_0_twist_pub = rospy.Publisher('/twist_o_0', TwistStamped, queue_size=10)
+  o_w_twist_pub = rospy.Publisher('/twist_world', TwistStamped, queue_size=10)
+  o_5_twist_pub = rospy.Publisher('/twist_o_5', TwistStamped, queue_size=10)
   # tfBuffer = tf2_ros.Buffer()
   # listener = tf2_ros.TransformListener(tfBuffer)
 
@@ -194,30 +194,28 @@ def main(args):
   # init publish
   publishCageAsPIN(broadcaster, corners, o_ref="o_0")
 
-  # define twist in world frame
-  world_twist = np.array([0.0, 0.0, 0.0, 0.01, 0.0, 0.0])
-  # convert twist to local frame, i.e. corner 5
-  local_twist = corners[0].actInv(pin.Motion(world_twist)).vector
-  # generate a pin motion from twist
-  exp6_mot = pin.exp6(pin.Motion(local_twist))
+  # define twist frame
+  twist = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.01])
+  # convert twist to motion
+  motion = pin.Motion(twist)
   
   # define updating rate
   rospy.loginfo('publishing cage tf...')
   rate = 10
   loop_rate = rospy.Rate(rate)
   while not rospy.is_shutdown():
-    # publish transform from world to cage center
-    # publishCage(brodcaster)
-    corners[0] = updateCageCenterPIN(corners[0], exp6_mot)
-    # corners[0] = updateCageCenterTwist(corners[0], local_twist, rate)
+    # update the cage center
+    # treat the twist as a motion in the world frame
+    corners = applyTwistInFrame(motion, -1, corners)
+    # treat the twist as a motion in the center frame
+    corners = applyTwistInFrame(motion, 0, corners)
+    # treat the twist as a motion in the corner 5 frame
+    corners = applyTwistInFrame(motion, 5, corners)
+    # publish the cage
+    publishTwist(motion, 'world', o_w_twist_pub)
+    publishTwist(motion, 'o_0', o_0_twist_pub)
+    publishTwist(motion, 'o_5', o_5_twist_pub)
     publishCageAsPIN(broadcaster, corners, o_ref="o_0")
-    try:
-      (trans_world, quat_world) = listener.lookupTransform('o_5', 'world', rospy.Time(0))
-      # twist_world = convertTwistRefFrame(local_twist, trans_world, quat_world)
-      # exp6_mot = pin.exp6(pin.Motion(twist_world))
-    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-      # print("nothing")
-      continue
     loop_rate.sleep()
   return 0
 

@@ -12,6 +12,7 @@ from pinocchio import XYZQUATToSE3 as quaternionTse3
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import WrenchStamped
 from pinocchio import Motion
 
 def rot_matrix(ax, ay, az): # x->y->z
@@ -157,6 +158,18 @@ def twist_transformation(m21,m10,r1_0,p1_0,p2_1):
 
     return m20
 
+def wrench_info(frame_id, W):
+    msg = WrenchStamped()
+    msg.header.frame_id = frame_id
+
+    msg.wrench.force.x = W.linear[0]
+    msg.wrench.force.y = W.linear[1]
+    msg.wrench.force.z = W.linear[2]
+    msg.wrench.torque.x = W.angular[0]
+    msg.wrench.torque.y = W.angular[1]
+    msg.wrench.torque.z = W.angular[2]
+
+    return msg
 
 # main
 if __name__ == '__main__': 
@@ -192,29 +205,79 @@ if __name__ == '__main__':
     v_o8.angular = np.array([0.5, 0, 0])
 
     ## twist 0  (publish vc with respect to o8)
-    twist_pub0 = rospy.Publisher('/twist0', TwistStamped, queue_size=10) 
+    twist_pub0 = rospy.Publisher('/twist_o8', TwistStamped, queue_size=10) 
     twist_msg0 = twist_info('o8', v_o8)
 
     # b.4
     o8_se3 = quaternionTse3(o[8-1])
     ## twist 1
-    twist_pub1 = rospy.Publisher('/twist1', TwistStamped, queue_size=10)
+    twist_pub1 = rospy.Publisher('/twist_o8_T_world', TwistStamped, queue_size=10)
 
     # b.5
     ## twist 2
     v_world = pin.Motion(np.array([0,1,0,0,0.5,0]))
-    twist_pub2 = rospy.Publisher('/twist2', TwistStamped, queue_size=10)
+    twist_pub2 = rospy.Publisher('/twist_world', TwistStamped, queue_size=10)
 
     o7_se3 = quaternionTse3(o[7])
-    twist_pub3 = rospy.Publisher('/twist3', TwistStamped, queue_size=10)
+    twist_pub3 = rospy.Publisher('/twist_world_T_o7', TwistStamped, queue_size=10)
 
-    twist_pub4 = rospy.Publisher('/twist4', TwistStamped, queue_size=10)
-    twist_pub5 = rospy.Publisher('/twist5', TwistStamped, queue_size=10)
+    twist_pub4 = rospy.Publisher('/twist_o8_T_world_action', TwistStamped, queue_size=10)
+    twist_pub5 = rospy.Publisher('/twist_world_T_o7_action', TwistStamped, queue_size=10)
 
+    # c
+    w_o8 = pin.Force.Random()
+    w_o8.linear = np.array([1,0,0])
+    w_o8.angular = np.array([0.5,0,0])
+
+    wrench_pub0 = rospy.Publisher('/wrench_o8', WrenchStamped,queue_size=10)
+    
+    '''
+    f   linear
+    tau angualr
+    '''
+    wrench_msg0 = wrench_info('o8',w_o8)
+
+    wrench_pub1 = rospy.Publisher('/wrench_o8_T_world', WrenchStamped,queue_size=10)
+    
+    # c.5
+    w_world = pin.Force(np.array([0,1,0,0,0.5,0]))
+    wrench_pub2= rospy.Publisher('/wrench_world', WrenchStamped,queue_size=10)
+    wrench_msg2 = wrench_info('world',w_world)
+    # wrench_pub2 =  rospy.Publisher('/wrench_world', WrenchStamped,queue_size=10)
+
+    wrench_pub3 = rospy.Publisher('/wrench_world_T_o7', WrenchStamped,queue_size=10)
+
+    wrench_pub4 = rospy.Publisher('/wrench_o8_T_world_action', WrenchStamped,queue_size=10)
+    wrench_pub5 = rospy.Publisher('/wrench_world_T_o7_action', WrenchStamped,queue_size=10)
     while not rospy.is_shutdown():
 
         tf_broadcast(o0_quaternion,o)
+        # wrench 0
+        wrench_pub0.publish(wrench_msg0)
 
+        # wrench 1
+        w_o8Tworld = o0_se3*o8_se3*w_o8
+        wrench_msg1 = wrench_info('world',w_o8Tworld )
+        wrench_pub1.publish(wrench_msg1)
+
+        # wrench 2
+        wrench_pub2.publish(wrench_msg2)
+
+        # wrench 3
+        w_worldTo7 = o7_se3.inverse()*(o0_se3.inverse()*w_world)
+        wrench_msg3 = wrench_info('o7',w_worldTo7 )
+        wrench_pub3.publish(wrench_msg3)
+
+        # c.6 use action
+        w_o8Tworld_action = o0_se3.act(o8_se3.act(w_o8))
+        # v_o8Tworld_action = o0_se3.action(o8_se3.action(v_o8))
+        wrench_msg4 = wrench_info('world', w_o8Tworld_action)
+        wrench_pub4.publish(wrench_msg4)
+
+        w_worldTo7_action = o7_se3.inverse().act(o0_se3.inverse().act(w_world))
+        wrench_msg5 = wrench_info('o7', w_worldTo7_action)
+        wrench_pub5.publish(wrench_msg5)
+# *****************************************t12*******************************************
         # t1 - t4
         # t3 - t5
         # twist 0   v o8
@@ -249,8 +312,11 @@ if __name__ == '__main__':
         v_worldTo7_action = o7_se3.inverse().act(o0_se3.inverse().act(v_world))
         twist_msg5 = twist_info('o7', v_worldTo7_action)
         twist_pub5.publish(twist_msg5)
-        
-        ## marker pub
+
+# *****************************************t12*******************************************
+
+# *****************************************t11*******************************************
+        # marker pub
         # p_world = Rc * (R8 * p + T8) + Tc
         p_o0 = np.dot(rot_matrix(180,0,0),p_o8)+transformation[7]
         p_world = np.dot(o0_se3.rotation, p_o0) + o0_se3.translation
@@ -262,7 +328,7 @@ if __name__ == '__main__':
         marker_info_world = marker_info("world",1)
         marker_info_world.points = [Point(p_world[0],p_world[1], p_world[2])]
         marker_pub1.publish(marker_info_world)
-
+# *****************************************t11*******************************************
         # update
         o0_se3 = pin.exp6(nu)*o0_se3
         o0_quaternion = se3Tquaternion(o0_se3) 

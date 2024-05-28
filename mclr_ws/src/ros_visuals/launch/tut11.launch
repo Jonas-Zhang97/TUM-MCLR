@@ -1,0 +1,4 @@
+  <launch>
+    <node pkg="ros_visuals" type="t11.py" name="t11" />
+    <node name="rviz" pkg="rviz" type="rviz"  args="-d $(find ros_visuals)/rviz/t11.rviz" />
+  </launch>

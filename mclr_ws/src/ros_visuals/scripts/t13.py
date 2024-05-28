@@ -7,31 +7,25 @@ import rospy
 # numpy
 import numpy as np
 # tf
+import tf2_ros
 import tf
 from tf.transformations import euler_from_matrix as mat2eul
+from tf.transformations import quaternion_matrix as quat2mat
 from tf.transformations import euler_from_quaternion as quat2eul
+from tf.transformations import quaternion_from_matrix as mat2quat
 # pinocchio
 import pinocchio as pin
 
+from geometry_msgs.msg import TwistStamped
 from visualization_msgs.msg import Marker
 
 def initNode():
-  rospy.init_node('t11')
-  rospy.loginfo('t11 node started')
+  rospy.init_node('t12')
+  rospy.loginfo('t12 node started')
 
-  # init listener and broadcaster
-  
-  
   return 0
 
-def initCage():
-# def the center of the cage
-  o0_t = np.array([0.5, 0.0, 1])
-  o0_r = pin.utils.rpyToMatrix(0.0, 3.14/4, 0.0)
-  # convert cage center to SE3 object
-  o0_M = pin.SE3(o0_r, o0_t)
-
-
+def genCage(center_M):
 
   # def the relative poses of the corners
   # translations
@@ -58,7 +52,7 @@ def initCage():
   ]
   # construct the cage corners as SE3 objects
   
-  corners = [o0_M]
+  corners = [center_M]
   for corner_id in range(8):
     # get the translation and euler angles
     corner_t = np.array(corner_tran[corner_id])
@@ -70,9 +64,11 @@ def initCage():
   return corners
 
 
-def updateCageCenterPIN(o0_M, exp6_mot):
-  o0_M = o0_M.act(exp6_mot)
-  return o0_M 
+def updateCorners(corners, ref_corner_id):
+  for corner_id, corner in enumerate(corners):
+    if corner_id == ref_corner_id:
+      corners[corner_id] = corners[ref_corner_id] * (corners[ref_corner_id].inverse() * corners[corner_id])
+  return corners
 
 
 def updateCageCenterTwist(o0_M, twist, rate):
@@ -100,100 +96,126 @@ def updateCageCenterTwist(o0_M, twist, rate):
   return pin.SE3(T)
 
 
-def publishCageAsPIN(broadcaster, corners):
+def publishCageAsPIN(broadcaster, corners, o_ref):
   for corner_id, corner in enumerate(corners):
     corner_name = "o_" + str(corner_id)
-    if corner_id == 0:
+    if corner_name == o_ref:
       broadcaster.sendTransform(corner.translation, pin.Quaternion(corner.rotation).coeffs(), rospy.Time.now(), corner_name, 'world')
     else:
-      broadcaster.sendTransform(corner.translation, pin.Quaternion(corner.rotation).coeffs(), rospy.Time.now(), corner_name, "o_0")
+      broadcaster.sendTransform(corner.translation, pin.Quaternion(corner.rotation).coeffs(), rospy.Time.now(), corner_name, o_ref)
   return 0
 
+def convertTwistRefFrame(twist, trans, quat):
+  """
+  args:
+    twist: numpy array of shape (6,), twist in current frame
+    trans: numpy array of shape (3,), translation of the reference frame
+    quat: numpy array of shape (4,), quaternion of the reference frame
+  output:
+    twist_ref: numpy array of shape (6,)
+  """
+  # define basic mathmatic operations
+  def skew(v):
+    return np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+  
+  def constructAdT(T):
+    AdT = np.zeros((6, 6))
+    AdT[0:3, 0:3] = T[0:3, 0:3]
+    AdT[3:6, 3:6] = T[0:3, 0:3]
+    AdT[3:6, 0:3] = np.dot(skew(T[0:3, 3]), T[0:3, 0:3])
+    return AdT
+  
+  def constructT(trans, quat):
+    T = quat2mat(quat)
+    T[0:3, 3] = trans
+    return T
+  
+  T = constructT(trans, quat)
+  AdT = constructAdT(T)
+  twist_ref = np.dot(AdT, twist)
 
-def spawnMarker(marker_pose, marker_rgb, ref_frame, marker_pub):
-  marker = Marker()
+  return twist_ref
 
-  marker.header.frame_id = ref_frame
-  marker.header.stamp = rospy.Time.now()
-  
-  marker.id = Marker.CUBE
-  
-  marker.type = 0
-  
-  marker.action = Marker.ADD
-  
-  marker.pose.position.x = marker_pose[0]
-  marker.pose.position.y = marker_pose[1]
-  marker.pose.position.z = marker_pose[2]
-  
-  marker.pose.orientation.x = marker_pose[3]
-  marker.pose.orientation.y = marker_pose[4]
-  marker.pose.orientation.z = marker_pose[5]
-  marker.pose.orientation.w = marker_pose[6]
-  
-  marker.scale.x = 0.1
-  marker.scale.y = 0.01
-  marker.scale.z = 0.05
-  
-  marker.color.a = 1.0
-  marker.color.r = marker_rgb[0]
-  marker.color.g = marker_rgb[1]
-  marker.color.b = marker_rgb[2]
-  
-  marker.lifetime = rospy.Duration()
-  
-  marker_pub.publish(marker)
-  
+def applyTwistInFrame(motion, corner_id, corners):
+  '''
+  args:
+    motion: pin.Motion object, twist in the an desired frame
+    corner_id: int, id of the corner frame where the twist is applied, -1 stands for world frame
+    corners: list of SE3 objects, corners of the cage
+  '''
+  if corner_id == 0:
+    exp6_mot_0 = pin.exp6(motion)
+    corners[0] = corners[0].act(exp6_mot_0)
+  elif corner_id == -1:
+    motion_0 = corners[0].inverse() * motion
+    exp6_mot_0 = pin.exp6(motion_0)
+    corners[0] = corners[0].act(exp6_mot_0)
+  else:
+    motion_0 = corners[corner_id] * motion
+    exp6_mot_0 = pin.exp6(motion_0)
+    corners[0] = corners[0].act(exp6_mot_0)
+  return corners
+
+def publishTwist(motion, frame_id, twist_pub):
+  # Create a TwistStamped message and fill in its values
+  msg = TwistStamped()
+  msg.header.frame_id = frame_id
+  msg.header.stamp = rospy.Time.now()
+  msg.twist.angular.x = motion.angular[0]
+  msg.twist.angular.y = motion.angular[1]
+  msg.twist.angular.z = motion.angular[2]
+  msg.twist.linear.x = motion.linear[0]
+  msg.twist.linear.y = motion.linear[1]
+  msg.twist.linear.z = motion.linear[2]
+  # publish the twist
+  twist_pub.publish(msg)
+
   return 0
-
-def convertMarkerFromCenterToWorld(marker_pose_world, exp6_mot):
-  # convert marker pose into se3 object
-  rot_eul = quat2eul(marker_pose_world[3:])
-  rot_mat = pin.utils.rpyToMatrix(rot_eul[0], rot_eul[1], rot_eul[2])
-  tran_vec = np.array(marker_pose_world[0:3])
-  marker_pose_se3 = pin.SE3(rot_mat, tran_vec)
-  # convert marker pose from corner to world
-  marker_pose_world = marker_pose_se3.act(exp6_mot)
-  # convert rotation to quaternion
-  rot_eul = mat2eul(marker_pose_world.rotation)
-  # convert to marker pose
-  marker_pose_world = [marker_pose_world.translation[0], marker_pose_world.translation[1], marker_pose_world.translation[2], 
-                       pin.Quaternion(marker_pose_world.rotation).coeffs()[0], pin.Quaternion(marker_pose_world.rotation).coeffs()[1], pin.Quaternion(marker_pose_world.rotation).coeffs()[2], pin.Quaternion(marker_pose_world.rotation).coeffs()[3]]
-  return marker_pose_world
-
 
 def main(args):
   # init node
   initNode()
+
   broadcaster = tf.TransformBroadcaster()
   listener = tf.TransformListener()
-  marker_pub = rospy.Publisher('visualization_marker', Marker, queue_size=10)
 
-  corners = initCage()
+  o_0_twist_pub = rospy.Publisher('/twist_o_0', TwistStamped, queue_size=10)
+  o_w_twist_pub = rospy.Publisher('/twist_world', TwistStamped, queue_size=10)
+  o_5_twist_pub = rospy.Publisher('/twist_o_5', TwistStamped, queue_size=10)
+  # tfBuffer = tf2_ros.Buffer()
+  # listener = tf2_ros.TransformListener(tfBuffer)
 
-  # define twist in world frame
-  world_twist = np.array([0.06, 0.0, 0.0, 0.1, 0.0, 0.1])
-  # convert twist to local frame
-  local_twist = corners[0].actInv(pin.Motion(world_twist)).vector
-  # generate a pin motion from twist
-  exp6_mot = pin.exp6(pin.Motion(local_twist))
+  center = np.array([1.0, 0.0, 1.0])
+  center_euler = np.array([0.0, 0.0, 0.0])
+  center_M = pin.SE3(pin.utils.rpyToMatrix(center_euler[0], center_euler[1], center_euler[2]), center)
 
-  marker_pose_corner = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
-  marker_pose_world = marker_pose_corner
+  corners = genCage(center_M)
+
+  # init publish
+  publishCageAsPIN(broadcaster, corners, o_ref="o_0")
+
+  # define twist frame
+  twist = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.01])
+  # convert twist to motion
+  motion = pin.Motion(twist)
   
   # define updating rate
   rospy.loginfo('publishing cage tf...')
   rate = 10
   loop_rate = rospy.Rate(rate)
   while not rospy.is_shutdown():
-    # publish transform from world to cage center
-    # publishCage(brodcaster)
-    corners[0] = updateCageCenterPIN(corners[0], exp6_mot)
-    # corners[0] = updateCageCenterTwist(corners[0], local_twist, rate)
-    publishCageAsPIN(broadcaster, corners)
-    spawnMarker(marker_pose_corner, [1, 0, 0], "o_5", marker_pub)
-    marker_pose_world = convertMarkerFromCenterToWorld(marker_pose_world, exp6_mot)
-    spawnMarker(marker_pose_world, [0, 1, 0], "world", marker_pub)
+    # update the cage center
+    # treat the twist as a motion in the world frame
+    corners = applyTwistInFrame(motion, -1, corners)
+    # treat the twist as a motion in the center frame
+    corners = applyTwistInFrame(motion, 0, corners)
+    # treat the twist as a motion in the corner 5 frame
+    corners = applyTwistInFrame(motion, 5, corners)
+    # publish the cage
+    publishTwist(motion, 'world', o_w_twist_pub)
+    publishTwist(motion, 'o_0', o_0_twist_pub)
+    publishTwist(motion, 'o_5', o_5_twist_pub)
+    publishCageAsPIN(broadcaster, corners, o_ref="o_0")
     loop_rate.sleep()
   return 0
 
