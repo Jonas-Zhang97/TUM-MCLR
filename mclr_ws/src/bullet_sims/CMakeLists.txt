@@ -165,7 +165,6 @@ catkin_install_python(PROGRAMS
   scripts/t21.py
   scripts/t22.py
   scripts/t23.py
-  scripts/t21_r.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
