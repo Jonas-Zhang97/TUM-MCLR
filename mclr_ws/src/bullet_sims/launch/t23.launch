@@ -1,5 +1,10 @@
 <launch>
-  <param name="robot_description" textfile="$(find talos)/talos_description/robots/talos_reduced.urdf.xml"/>
-  <node pkg="bullet_sims" type="t23.py" name="t23" />
-  <node name="rviz" pkg="rviz" type="rviz"  args="-d $(find bullet_sims)/rviz/t23.rviz" />
-</launch>
+  <!-- Load the urdf into the parameter server. -->
+
+  <param name="robot_description" textfile="$(find talos_description)/robots/talos_reduced.urdf" />
+    
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_st_pub" >
+    </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bullet_sims)/rviz/t23.rviz" />
+  </launch>

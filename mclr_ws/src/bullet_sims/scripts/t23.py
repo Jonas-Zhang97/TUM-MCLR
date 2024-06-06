@@ -1,15 +1,19 @@
 #!/bin/python3.8
 import sys
+import os
 import pybullet as pb
 import numpy as np
 from simulator.pybullet_wrapper import PybulletWrapper
 from simulator.robot import Robot
 import pinocchio as pin
 import rospy
+import rospkg
 from sensor_msgs.msg import JointState
 # For REEM-C robot
 #urdf = "src/reemc/reemc_description/robots/reemc.urdf"
 #path_meshes = "src/reemc/reemc_description/meshes/../.."
+
+print("wording dir ", os.getcwd())
 
 def initNode():
     rospy.init_node('t23')
@@ -32,10 +36,12 @@ def publishJointState(robot, tau, joint_state_pub):
     joint_state_pub.publish(msg)
 
 def main(args):
+    rospack = rospkg.RosPack()
+    description_path = rospack.get_path('talos_description')
 
     # For Talos robot
-    urdf = "src/talos/talos_description/robots/talos_reduced.urdf"
-    path_meshes = "src/talos/talos_description/meshes/../.."
+    urdf = os.path.join(description_path, "robots/talos_reduced.urdf")
+    path_meshes = os.path.join(description_path, "meshes/../..")
 
     '''
     actuated joint names:   32 ['torso_1_joint', 'torso_2_joint', 

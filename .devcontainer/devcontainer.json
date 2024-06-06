@@ -24,10 +24,10 @@
 		}
 	},
 	"runArgs": [
-		// "--runtime=nvidia",
+		"--runtime=nvidia",
 		"--network=host",
-		//"--privileged",
-		// "--gpus=all"
+		"--privileged",
+		"--gpus=all"
 	],
 	// "mounts": [
 	// 	{

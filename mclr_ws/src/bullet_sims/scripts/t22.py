@@ -5,15 +5,21 @@ import numpy as np
 from simulator.pybullet_wrapper import PybulletWrapper
 from simulator.robot import Robot
 import pinocchio as pin
+import rospkg
+import os
+
 
 # For REEM-C robot
 #urdf = "src/reemc/reemc_description/robots/reemc.urdf"
 #path_meshes = "src/reemc/reemc_description/meshes/../.."
 
 # For Talos robot
-urdf = "src/talos/talos_description/robots/talos_reduced.urdf"
-path_meshes = "src/talos/talos_description/meshes/../.."
+rospack = rospkg.RosPack()
+description_path = rospack.get_path('talos_description')
 
+# For Talos robot
+urdf = os.path.join(description_path, "robots/talos_reduced.urdf")
+path_meshes = os.path.join(description_path, "meshes/../..")
 '''
 actuated joint names:   32 ['torso_1_joint', 'torso_2_joint', 
                             'head_1_joint', 'head_2_joint', 

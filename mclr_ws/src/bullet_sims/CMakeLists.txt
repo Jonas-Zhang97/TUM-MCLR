@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   reemc_description
   rospy
   simulator
-  talos_description
 )
 
 ## System dependencies are found with CMake's conventions
