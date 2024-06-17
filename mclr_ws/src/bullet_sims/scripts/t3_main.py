@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.linalg as la
 
-# simulator (#TODO: set your own import path!)
 from simulator.pybullet_wrapper import PybulletWrapper
 from simulator.robot import Robot
 
@@ -20,6 +19,8 @@ from geometry_msgs.msg import PoseStamped
 import sys
 import os
 
+# TODO: make the joint space controller always active to prevent robot from falling
+
 ################################################################################
 # utility functions
 ################################################################################
@@ -34,7 +35,7 @@ class State(Enum):
 
 class Talos(Robot):
   def __init__(self, simulator, q=None, verbose=True, useFixedBase=True):
-    #TODO: Create RobotWrapper (fixed base), Call base class constructor, make publisher 
+    # TODO: Create RobotWrapper (fixed base), Call base class constructor, make publisher 
     description_path = rospkg.RosPack().get_path('talos_description')
     urdf_path = os.path.join(description_path, "robots/talos_reduced.urdf")
     path_meshes = os.path.join(description_path, "meshes/../..")
@@ -71,14 +72,16 @@ class Talos(Robot):
   
   def publish(self):
     # TODO: publish robot state to ros
+    # FIXME: modify the actuatedJointNames()
     joint_state_msg = JointState()
     joint_state_msg.header.stamp = rospy.Time.now()
+    # joint_reindexing = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 2, 3]
     joint_state_msg.name = self.actuatedJointNames()
     joint_state_msg.position = self.actuatedJointPosition().tolist()
     joint_state_msg.velocity = self.actuatedJointVelocity().tolist()
     joint_state_msg.effort = [0.0] * len(joint_state_msg.name)  # Assuming zero effort for simplicity
 
-    self.joint_state_publisher.publish(joint_state_msg)
+    self.joint_state_pub.publish(joint_state_msg)
 
 ################################################################################
 # Controllers
@@ -250,6 +253,8 @@ class Envionment:
         self.robot.setActuatedJointTorques(tau_curr)
             
         # TODO: publish ros stuff
+        self.robot.publish()
+        
         
 
 def main():    

@@ -26,11 +26,14 @@ def publishJointState(robot, tau, joint_state_pub):
     msg.header.stamp = rospy.Time.now()
 
     # Set the joint names for the JointState message
-    msg.name = robot.actuatedJointNames()
+    # msg.name = robot.actuatedJointNames()
+    joint_reindexing = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 2, 3]
+    msg.name = [robot.actuatedJointNames()[i] for i in joint_reindexing]
+    # msg.name = jointsname[20:26] + jointsname[26:32] + jointsname[0:2] + jointsname[4:11] + jointsname[11:13] + jointsname[13:20] + jointsname[2:4]
 
     # Set the joint positions, velocities, and efforts for the JointState message
-    msg.position = robot._q
-    msg.velocity = robot._v
+    msg.position = robot._q[7: ]
+    msg.velocity = robot._v[7: ]
     msg.effort = tau
 
     joint_state_pub.publish(msg)
@@ -109,6 +112,9 @@ def main(args):
                   q=q_home,             # Initial state
                   useFixedBase=False,   # Fixed base or not
                   verbose=True)         # Printout details
+    
+    # print("actuated joint names:  ", robot.actuatedJointNames())
+    # print("q: ", robot._q)
 
     data = robot._model.createData()
 
@@ -129,6 +135,7 @@ def main(args):
     tau = q_actuated_home*0
 
     # Set PD gains
+    # Size 39*39
     K_p = np.eye(39)
     K_d = np.eye(39)
 
@@ -147,15 +154,13 @@ def main(args):
 
     # head
     K_p[37: , 37: ] = np.zeros(2) * 300
-    np.set_printoptions(threshold=sys.maxsize)
-    print("K_p", K_p)
 
     initNode()
     joint_state_pub = rospy.Publisher('/joint_states', JointState, queue_size=10)
 
     d = 0
     done = False
-    loop_rate = rospy.Rate(30)
+    loop_rate = rospy.Rate(10)
     while not done:
         # update the simulator and the robot
         simulator.step()
@@ -170,7 +175,8 @@ def main(args):
         d += 0.001
 
         tau = np.dot(K_p[7: , 7: ], (q_des[7: ] - robot._q[7: ])) - np.dot(K_d[7: , 7: ], robot._v[6: ])
-
+        # print("size of tau: ", tau.size)
+        # print(robot._q.size)
         # command to the robot
         robot.setActuatedJointTorques(tau)
         publishJointState(robot, tau, joint_state_pub)
