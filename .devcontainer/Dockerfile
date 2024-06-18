@@ -141,3 +141,7 @@ RUN echo "export CMAKE_PREFIX_PATH=/opt/openrobots:\$CMAKE_PREFIX_PATH" >> ~/.ba
 
 RUN pip install pybullet
 RUN pip install numpy --upgrade
+
+RUN sudo apt-get update
+RUN sudo apt-get install -y -q --no-install-recommends robotpkg-py3*-tsid
+RUN echo "source /workspaces/mclr/mclr_ws/devel/setup.bash" >> ~/.bashrc

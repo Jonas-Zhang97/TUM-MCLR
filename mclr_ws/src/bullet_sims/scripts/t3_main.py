@@ -50,7 +50,7 @@ class Talos(Robot):
                      basePosition=np.array([0, 0, 1.15]),
                      baseQuationerion=np.array([0, 0, 0, 1]),
                      q=q,
-                     useFixedBase=useFixedBase,
+                     useFixedBase=True,
                      verbose=verbose)
     self.joint_state_pub = rospy.Publisher('joint_states', JointState, queue_size=10)
       

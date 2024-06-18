@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(simulator)
+project(tutorial_4)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
@@ -9,7 +9,7 @@ catkin_python_setup()
 
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES simulator
+#  LIBRARIES tutorial_4
 #  CATKIN_DEPENDS rospy
 #  DEPENDS system_lib
 )
@@ -20,10 +20,7 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS
-  src/simulator/body.py
-  src/simulator/objects.py
-  src/simulator/pybullet_wrapper.py
-  src/simulator/robot.py
-  src/simulator/utilities.py
+  src/tutorial_4/config.py
+  src/tutorial_4/tsid_wrapper.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

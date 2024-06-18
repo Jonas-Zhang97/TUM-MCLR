@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   reemc_description
   rospy
   simulator
+  tutorial_4
 )
 
 ## System dependencies are found with CMake's conventions
@@ -165,6 +166,8 @@ catkin_install_python(PROGRAMS
   scripts/t22.py
   scripts/t23.py
   scripts/t3_main.py
+  scripts/01_standing.py
+  scripts/02_one_leg_stand.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
