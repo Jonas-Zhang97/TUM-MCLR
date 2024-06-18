@@ -139,7 +139,7 @@ RUN echo "export LD_LIBRARY_PATH=/opt/openrobots/lib:\$LD_LIBRARY_PATH"  >> ~/.b
 RUN echo "export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:\$PYTHONPATH"  >> ~/.bashrc
 RUN echo "export CMAKE_PREFIX_PATH=/opt/openrobots:\$CMAKE_PREFIX_PATH" >> ~/.bashrc
 
-RUN pip install pybullet
+RUN pip install pybullet pandas
 RUN pip install numpy --upgrade
 
 RUN sudo apt-get update
