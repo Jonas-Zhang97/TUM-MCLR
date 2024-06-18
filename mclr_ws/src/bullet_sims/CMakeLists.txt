@@ -168,6 +168,8 @@ catkin_install_python(PROGRAMS
   scripts/t3_main.py
   scripts/01_standing.py
   scripts/02_one_leg_stand.py
+  scripts/03_squating.py
+  scripts/03_plotter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

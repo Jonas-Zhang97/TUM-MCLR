@@ -2,6 +2,9 @@ import numpy as np
 from numpy import nan
 from numpy.linalg import norm as norm
 import matplotlib.pyplot as plt
+import csv
+import os
+import rospkg
 
 # pinocchio
 import pinocchio as pin
@@ -20,6 +23,7 @@ import rospy
 import tf
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
+import rospkg
 
 ################################################################################
 # settings
@@ -71,6 +75,14 @@ class Talos(Robot):
 ################################################################################
 
 def main(): 
+    # reset data file
+    csv_file = os.path.join(rospkg.RosPack().get_path('bullet_sims'), 'doc/data.csv')
+    f = open(csv_file, "w")
+    f.truncate()
+    title_writer = csv.writer(f)
+    title_writer.writerow(["time", "reference_height", "computed_height", "simulator_height"])
+    f.close()
+
     # TODO init TSIDWrapper
     tsid = TSIDWrapper(conf)
     # TODO init Simulator
@@ -79,6 +91,7 @@ def main():
     robot = Talos(simulator=simulator, urdf=conf.urdf, model=tsid.model, q=conf.q_home, verbose=True, useFixedBase=False)
     
     t_publish = 0.0
+    t_plot = 0.0
 
     # set flags
     com_reset = False
@@ -91,7 +104,6 @@ def main():
 
     rh_circle_center = np.array([0.4, -0.2, 1.1])
     rh_circle_radius = 0.2
-    rh_circle_freq = 0.1
     rh_circle_omega = 2 * np.pi * 0.1
 
     while not rospy.is_shutdown():
@@ -156,8 +168,21 @@ def main():
             
             tsid.set_RH_pose_ref(rh_pose_target, rh_velocity_target, rh_acceleration_target)
             
+            
+
+
 
         # publish to ros
+        if t - t_plot > 1./50.:
+            # plot required data
+            t_plot = t
+            '''
+            [t, tsid.comReference().pos()[2], tsid.comState().pos()[2], robot.baseWorldPosition()[2]
+            '''
+            with open(csv_file, 'a') as f:
+                writer = csv.writer(f)  # Note: writes lists, not dicts.
+                writer.writerow([t, tsid.comReference().pos()[2], tsid.comState().pos()[2], robot.baseWorldPosition()[2]])
+            
         if t - t_publish > 1./30.:
             t_publish = t
             # get current BASE Pose
