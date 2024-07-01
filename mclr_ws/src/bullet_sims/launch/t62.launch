@@ -1,0 +1,20 @@
+<launch>
+    <!-- Load the urdf into the parameter server. -->
+    <arg name="balance_strategy" default="ankle"/>
+    
+    <node name="t62" pkg="bullet_sims" type="t62.py" output="screen">
+        <param name="balance_strategy" type="string" value="$(arg balance_strategy)" />
+    </node>
+
+    <node name="t61_plotter" pkg="bullet_sims" type="t6_plotter.py" output="screen"/>
+
+    <param name="robot_description" command ="cat $(find talos_description)/robots/talos_reduced_no_hands.urdf" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_pub" >
+    </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bullet_sims)/rviz/t41.rviz" />
+
+    <!-- <node name="t3_marker" pkg="bullet_sims" type="t3_marker.py" output="screen" > -->
+    <!-- </node> -->
+</launch>

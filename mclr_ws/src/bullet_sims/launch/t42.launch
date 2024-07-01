@@ -8,7 +8,4 @@
     </node>
 
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bullet_sims)/rviz/t41.rviz" />
-
-    <!-- <node name="t3_marker" pkg="bullet_sims" type="t3_marker.py" output="screen" > -->
-    <!-- </node> -->
 </launch>

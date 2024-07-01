@@ -161,15 +161,22 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
+  # for tutorial_2
   scripts/t2_temp.py
   scripts/t21.py
   scripts/t22.py
   scripts/t23.py
+  # for tutorial_3
   scripts/t3_main.py
+  # for tutorial_4
   scripts/01_standing.py
   scripts/02_one_leg_stand.py
   scripts/03_squating.py
   scripts/03_plotter.py
+  # for tutorial_6
+  scripts/t61.py
+  scripts/t62.py
+  scripts/t6_plotter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
