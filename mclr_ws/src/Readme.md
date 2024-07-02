@@ -1,96 +1,27 @@
-# 2nd Deliverable
+# 3rd Deliverable
 
-This folder contains scripts for 2nd assignment of MCLR.
+## Prerequest
 
-To run the separate homework, follow the instructions below.
+Install drake in a python virtual environment as descriped in the official [documentation](https://drake.mit.edu/pip.html#stable-releases), all codes provided here should be ran in the environment.
 
-## Tutorial 4: Whole-body control
-
-### Exercise 1: Getting the robot to stand
-
-Open a terminal, source the workspace, and then run:
+Assuming the environment is named as "example_env", activate it with:
 
 ```bash
-roslaunch bullet_sims t41.launch
+source example_env/bin/activate
 ```
 
-You should see the robot spawning in the bullet simulation and rviz and standing steadily.
+## Tutorial 6: Linear Model Predictive Control for Walking
 
-### Exercise 2: Getting the robot to balance on foot
+### a Task 1: Getting familiar
 
-Run the command:
+To check the pendulumn simulator, run:
 
 ```bash
-roslaunch bullet_sims t42.launch
+python3 mclr_ws/src/tutorial_7/scripts/example_2_pydrake.py 
 ```
 
-After spawned, the robot will move its center of mass, and after 2 seconds, it will stand just with the right leg.
-
-### Exercise 3: Getting the robot to do squats & Adding arm motions
-
-Run:
+this will start the simulation without any constraints on the torque. By providing a `--torque limit` argument, an additional torque limit will be performed on the simulation, for example:
 
 ```bash
-roslaunch bullet_sims t4.launch
+python3 mclr_ws/src/tutorial_7/scripts/example_2_pydrake.py --torque_limit=3 
 ```
-
-Along with the one leg standing, the robot will squat for a few seconds and then moves its arm in a circle. You will also see a live plot showing the 3 types of hights of center of mass (only z-axis, the rest are constant values).
-
-## Tutorial 6: Balance Control
-
-Report of this tutorial can be found [here](./bullet_sims/doc/report.md).
-
-All the launch command below will bring up the robot in bullet simulation and rviz, along with a live plotter showing the ZMP, CMP and CP (x- and y-axis).
-
-### Torque Control Modality
-
-For **no strategy** run:
-
-```bash
-roslaunch bullet_sims t61.launch balance_strategy:=none
-```
-
-For **ankle strategy** run:
-
-```bash
-roslaunch bullet_sims t61.launch balance_strategy:=ankle
-```
-
-For **hip strategy** run:
-
-```bash
-roslaunch bullet_sims t61.launch balance_strategy:=hip
-```
-
-For **combined strategy** run:
-
-```bash
-roslaunch bullet_sims t61.launch balance_strategy:=combined
-```
-
-### Position Control Modality
-
-For **no strategy** run:
-
-```bash
-roslaunch bullet_sims t62.launch balance_strategy:=none
-```
-
-For **ankle strategy** run:
-
-```bash
-roslaunch bullet_sims t62.launch balance_strategy:=ankle
-```
-
-For **hip strategy** run:
-
-```bash
-roslaunch bullet_sims t62.launch balance_strategy:=hip
-```
-
-For **combined strategy** run:
-
-```bash
-roslaunch bullet_sims t62.launch balance_strategy:=combined
-```
-
