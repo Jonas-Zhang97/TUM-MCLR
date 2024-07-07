@@ -120,7 +120,14 @@ ENV NVIDIA_VISIBLE_DEVICES \
 ENV NVIDIA_DRIVER_CAPABILITIES \
   ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
-RUN  sudo apt install -qqy lsb-release curl
+RUN  sudo apt install -qqy lsb-release \
+  curl\
+  fuse \
+  libfuse2 \
+  lshw \
+  xdg-utils
+
+RUN sudo sysctl kernel.unprivileged_userns_clone=1
 
 RUN sudo mkdir -p /etc/apt/keyrings
 RUN curl http://robotpkg.openrobots.org/packages/debian/robotpkg.asc \

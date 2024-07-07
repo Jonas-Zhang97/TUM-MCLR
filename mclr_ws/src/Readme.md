@@ -14,12 +14,17 @@ cd ~/mclr_ws
 
 ## Prerequest
 
-Install drake in a python virtual environment as descriped in the official [documentation](https://drake.mit.edu/pip.html#stable-releases), all codes provided here should be ran in the environment.
-
-Assuming the environment is named as `example_env`, activate it with:
+Drake is needed for solving MPC problems, it is recommanded to install it globally:
 
 ```bash
-source example_env/bin/activate
+pip install pip --upgrade
+pip install drake
+```
+
+For tutorial 7, trajectories are generated via `ndcurves`, run the following command for a system-wide installation:
+
+```bash
+sudo apt install robotpkg-py3\*-ndcurves
 ```
 
 ## Tutorial 6: Linear Model Predictive Control for Walking
@@ -55,3 +60,7 @@ python3 src/tutorial_7/scripts/mpc_lipm_2ord.py
 ```
 
 In figure 2 (plots in y-axis), you can notice an obseravable disturbance at 3.2 second in `y acc of CoM`, which corresponds to the 5th step (the 3rd blue step), where you can see that the `traj of ZMP` has a sudden change.
+
+## Tutorial 7: Walking Control
+
+### Task 1: Implement Modules

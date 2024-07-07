@@ -391,6 +391,8 @@ class TSIDWrapper:
 
         self.contact_LF_active = True
         self.contact_RF_active = True
+        self.motion_LF_active = False
+        self.motion_RF_active = False
         self.motion_RH_active = False
         self.motion_LH_active = False
         
