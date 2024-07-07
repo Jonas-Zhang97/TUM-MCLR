@@ -266,7 +266,7 @@ for i in range(NO_STEPS):
 #>>>>TODO: add the cost at each timestep, hint: prog.AddCost
 
 for i in range(TOTAL_NO_SAMPLES-1):
-    prog.AddCost(alpha * ((control[i,0]-zmp_ref[i][0])**2 +(control[i,1]-zmp_ref[i][1])**2) + 
+    prog.AddCost(alpha * ((control[i,0] - zmp_ref[i][0])**2  + (control[i,1] - zmp_ref[i][1])**2) + 
                  gamma * (state[i][1]**2 + state[i][3]**2))
 
 ################################################################################

@@ -45,3 +45,13 @@ In the terminal with the above mentioned virtual environment activated, run:
 ```bash
 python3 src/tutorial_7/scripts/ocp_lipm_2ord.py 
 ```
+
+### c Task 3: Linear Model Predictive Control
+
+For this task, run
+
+```bash
+python3 src/tutorial_7/scripts/mpc_lipm_2ord.py
+```
+
+In figure 2 (plots in y-axis), you can notice an obseravable disturbance at 3.2 second in `y acc of CoM`, which corresponds to the 5th step (the 3rd blue step), where you can see that the `traj of ZMP` has a sudden change.

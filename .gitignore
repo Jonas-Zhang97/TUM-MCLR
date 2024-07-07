@@ -4,5 +4,5 @@ mclr_ws/devel
 mclr_ws/logs
 mclr_ws/src/.vscode
 mclr_ws/.catkin_tools
-mclr_ref/
+ref/
 t7_env/
