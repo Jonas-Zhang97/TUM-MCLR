@@ -38,3 +38,7 @@ then, to the file `.devcontainer/devcontainer.json`, in `runArgs` comment the fo
 Open the local repo in VSCode, you should see a pop-up asking if you want to reopen in devcontainer, click yes. If you don't see any pop-up, press <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd>, type "remote" in searchbar and choose `rebuild and reopen in devcontainer`.
 
 After the container is built, you can then check this [page](https://github.com/Jonas-Zhang97/TUM-MCLR/tree/master/mclr_ws/src) or this [readme](./mclr_ws/src/Readme.md) for the code.
+
+## Issues
+
+- [ ] FromAsCasing issue in Dockerfile (not fetal, fix in the end)

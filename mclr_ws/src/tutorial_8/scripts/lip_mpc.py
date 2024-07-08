@@ -42,6 +42,7 @@ class LIPInterpolator:
         self.conf = conf
         self.dt = conf.dt
         self.x = x_inital
+        self.x_dot = np.array([[0,0],[0,0]])
         #>>>>TODO: Finish
         self.g = conf.g
         self.h = conf.h
@@ -57,9 +58,9 @@ class LIPInterpolator:
         #>>>>TODO: return the center of mass state
         # that is position \in R3, velocity \in R3, acceleration \in R3
         c, c_dot, c_ddot = None, None, None
-        c = self.x
-        c_dot = self.x_dot
-        c_ddot = self.A @ self.x.reshape(2, 2)
+        c = self.x[0]
+        c_dot = self.x_dot[0]
+        c_ddot = self.x_dot[1]
         return [c, c_dot, c_ddot]
     
     def dcm(self):

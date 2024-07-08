@@ -92,8 +92,8 @@ class Talos:
     def update(self):
         """updates the robot
         """
-        t = self.sim.time()
-        dt = self.sim.dt()
+        t = self.sim.simTime()
+        dt = self.sim.stepTime()
 
         #>>>> TODO update the pybullet robot
         self.sim.step()
@@ -284,6 +284,7 @@ class Talos:
 
         # get CoM state
         self.com_state = self.stack.comState()
+        self.d = self.H_w_lankle.translation[2]
 
     def publish(self):
         t = rospy.Time.now()
@@ -310,6 +311,12 @@ class Talos:
         # get the current state
         q = self.robot.q()
         v = self.robot.v()
+
+        problem = self.stack.formulation.computeProblemData(t, q, v)
+        solution = self.stack.solver.solve(problem)
+        assert solution.status==0, "QP problem could not be solved! Error code: %d" % solution.status
+
+        dv = self.stack.formulation.getAccelerations(solution)
         
         # solve the whole body qp
         #>>>> TODO: sovle the wbc and command the torque to pybullet robot
@@ -317,8 +324,9 @@ class Talos:
     def _update_zmp_estimate(self):
         """update the estimated zmp position
         """
-        #>>>> TODO: compute the zmp based on force torque sensor readings
+        #>>>> TODO compute the zmp based on force torque sensor readings
         ######################################################################### NOTE:  This part is copied from the previous tutorial 6, not tested yet
+        self.updateSensor()
         p_lx = (self.wr_lankle.angular[1] - self.wr_lankle.linear[0] * self.d) / self.wr_lankle.linear[2]
         p_ly = (self.wr_lankle.angular[0] - self.wr_lankle.linear[1] * self.d) / self.wr_lankle.linear[2]
         p_l = np.array([p_lx, p_ly, 0])
@@ -339,7 +347,8 @@ class Talos:
     def _update_dcm_estimate(self):
         """update the estimated dcm position
         """
-        #>>>> TODO: compute the com based on current center of mass state
+        self.updateSensor()
+        #>>>> TODO compute the com based on current center of mass state
         x_p = [self.com_state.pos()[0], self.com_state.pos()[1], 0]
         x_p_dot = [self.com_state.vel()[0], self.com_state.vel()[1], 0]
         

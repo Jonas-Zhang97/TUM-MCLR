@@ -155,7 +155,7 @@ RUN sudo apt-get install -y -q --no-install-recommends robotpkg-py3*-tsid
 RUN echo "source /workspaces/mclr/mclr_ws/devel/setup.bash" >> ~/.bashrc
 
 # for drake
-RUN sudo apt install python3.8-venv
-# RUN python3 -m venv t7_env
-# RUN t7_env/bin/pip install pip --upgrade
-# RUN t7_env/bin/pip/install drake
+RUN pip install pip --upgrade
+RUN pip install drake
+
+RUN sudo apt install robotpkg-py3\*-ndcurves

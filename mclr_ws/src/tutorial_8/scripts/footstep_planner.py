@@ -62,7 +62,7 @@ class FootStepPlanner:
         self.conf = conf
         self.steps = []
         
-    def planLine(self, T_0_w, side, no_steps):
+    def planLine(self, T_0_w, side, no_steps, simulator, is_plot=False):
         """plan a sequence of steps in a strait line
 
         Args:
@@ -86,11 +86,24 @@ class FootStepPlanner:
         #>>>>Note: Plan the second step parallel to the first step (robot starts standing on both feet)
         #>>>>Note: Plan the final step parallel to the last-1 step (robot stops standing on both feet)
         steps=[T_0_w]
-        for i in range(0,no_steps):
-            T_i = steps[i].copy()
-            T_i.translation += np.array([dx, (-1)**(i + 1) * dy, 0])
-            steps.append(T_i)
-            print(i+1, "planed step: \n", T_i.translation)
+        if side == Side.LEFT:
+            for i in range(0,no_steps):
+                T_i = steps[i].copy()
+                T_i.translation += np.array([dx, (-1)**(i + 1) * dy, 0])
+                steps.append(T_i)
+                print(i+1, "planed step: \n", T_i.translation)
+        else:
+            for i in range(0,no_steps):
+                T_i = steps[i].copy()
+                T_i.translation += np.array([dx, (-1)**i * dy, 0])
+                steps.append(T_i)
+                print(i+1, "planed step: \n", T_i.translation)
+        
+        if is_plot:
+            fs = FootStep(steps, 0, side)
+            #>>>>TODO: Check that the plan looks as expected
+            fs.plot(simulator)
+
         return steps
 
     
@@ -102,6 +115,7 @@ class FootStepPlanner:
 if __name__=='__main__':
     """ Test footstep planner
     """
+    is_plot = True
     
     #>>>>TODO: Generate a plan and plot it in pybullet.
     fsp = FootStepPlanner(conf)
@@ -109,11 +123,13 @@ if __name__=='__main__':
     T_0_w = pin.SE3.Identity()
     T_0_w.translation = np.array([0, conf.step_size_y, 0])
     
-    planed_steps = fsp.planLine(T_0_w, Side.LEFT, 5)
     
-    fs = FootStep(planed_steps, 0, Side.LEFT)
     #>>>>TODO: Check that the plan looks as expected
     line_id = -1
     simulator = pbw.PybulletWrapper()
-    while True:
+
+    planed_steps = fsp.planLine(T_0_w, Side.LEFT, 5, simulator)
+    
+    fs = FootStep(planed_steps, 0, Side.LEFT)
+    while is_plot == True:
         fs.plot(simulator)

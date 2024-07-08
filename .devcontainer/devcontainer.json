@@ -26,7 +26,8 @@
 				"ms-iot.vscode-ros",
 				"ms-azuretools.vscode-docker",
 				"ms-vscode.cmake-tools",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"yzhang.markdown-all-in-one"
 			]
 		}
 	},
