@@ -120,7 +120,8 @@ ENV NVIDIA_VISIBLE_DEVICES \
 ENV NVIDIA_DRIVER_CAPABILITIES \
   ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
-RUN  sudo apt install -qqy lsb-release \
+RUN sudo apt-get update
+RUN sudo apt-get install -qqy lsb-release \
   curl\
   fuse \
   libfuse2 \
