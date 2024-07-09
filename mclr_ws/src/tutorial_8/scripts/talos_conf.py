@@ -114,17 +114,18 @@ h = 0.85                        # walking height
 # mpc settings
 dt_mpc = 0.1                                            # sampling time interval for the mpc
 step_dur = 0.8                                          # time per step 
-no_mpc_samples_per_step = int(round(step_dur/dt_mpc))   # number of mpc updates
+no_mpc_samples_per_step = int(round(step_dur/dt_mpc))   # = 8   # number of mpc updates
+# dt = 0.001
 
 # mpc horizon settings
 no_steps_per_horizon = 2
-horizion_dur = no_steps_per_horizon*step_dur
-no_mpc_samples_per_horizon = int(round(horizion_dur/dt_mpc))
+horizion_dur = no_steps_per_horizon*step_dur                             # = 1.6
+no_mpc_samples_per_horizon = int(round(horizion_dur/dt_mpc))             # = 16
 
 # mpc cost settings
 alpha       = 10**(-1)          # ZMP error squared cost weight
 gamma       = 10**(-3)          # VEL smoothing cost
 
-no_sim_per_mpc = int(round(dt_mpc / dt))        # number of sim between mpc update
-no_sim_per_step = int(round(step_dur / dt))     # number of sim between foot steps
+no_sim_per_mpc = int(round(dt_mpc / dt))        # = 100 # number of sim between mpc update
+no_sim_per_step = int(round(step_dur / dt))     # = 800 # number of sim between foot steps
 

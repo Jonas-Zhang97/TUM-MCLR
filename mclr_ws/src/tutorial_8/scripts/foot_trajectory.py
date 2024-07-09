@@ -38,7 +38,7 @@ class SwingFootTrajectory:
         # p1 = \left( \frac{\text{step_size}}{2}, ~ 0, ~ 2 \cdot \text{step_height} \right)
 
         way_pts = [T0.translation.tolist(), 
-                   [(T1.translation[0] - T0.translation[0]) / 2, 0, self._height * 2], 
+                   [(T1.translation[0] - T0.translation[0]) / 2, (T1.translation[2] - T0.translation[1]) / 2, self._height * 2], 
                    T1.translation.tolist()]
         way_pts = np.array(way_pts).T
         bezier_ref = curves.bezier(way_pts)

@@ -107,6 +107,8 @@ class Talos:
         
     def setSupportFoot(self, side):
         """sets the the support foot of the robot on given side
+        args:
+            side (Side): the side of the support foot
         """
         
         # The support foot is in rigid contact with the ground and should 
@@ -117,14 +119,16 @@ class Talos:
         #>>>> TODO At the same time deactivate the motion task on the support foot
         if side == Side.LEFT:
             self.stack.contact_LF_active = True
-            self.stack.motion_LF_active = False
+            self.stack.add_contact_LF()
         else:
             self.stack.contact_RF_active = True
-            self.stack.motion_RF_active = False
+            self.stack.add_contact_RF()
 
     
     def setSwingFoot(self, side):
         """sets the swing foot of the robot on given side
+        args:
+            side (Side): the side of the swing foot
         """
         
         # The swing foot is not in contact and can move
@@ -133,11 +137,11 @@ class Talos:
         #>>>> TODO Deactivate the foot contact on the swing foot
         #>>>> TODO At the same time turn on the motion task on the swing foot
         if side == Side.LEFT:
-            self.stack.contact_LF_active = False
             self.stack.motion_LF_active = True
+            self.stack.remove_contact_LF()
         else:  
-            self.stack.contact_RF_active = False
-            self.stack.motion_RF_active = True        
+            self.stack.motion_RF_active = True
+            self.stack.remove_contact_RF()   
         
     def updateSwingFootRef(self, T_swing_w, V_swing_w, A_swing_w):
         """updates the swing foot motion reference
@@ -316,7 +320,9 @@ class Talos:
         solution = self.stack.solver.solve(problem)
         assert solution.status==0, "QP problem could not be solved! Error code: %d" % solution.status
 
-        dv = self.stack.formulation.getAccelerations(solution)
+        acc = self.stack.formulation.getAccelerations(solution)
+        q_tsid, v_tsid = self.stack.integrate_dv(conf.q_home, v, acc, dt)
+        self.robot.setActuatedJointPositions(q_tsid, v_tsid)
         
         # solve the whole body qp
         #>>>> TODO: sovle the wbc and command the torque to pybullet robot
@@ -353,5 +359,5 @@ class Talos:
         x_p_dot = [self.com_state.vel()[0], self.com_state.vel()[1], 0]
         
         dcm = x_p + x_p_dot / np.sqrt(9.81 / self.com_state.pos()[2])
-        self.dcm = None
+        self.dcm = dcm
 

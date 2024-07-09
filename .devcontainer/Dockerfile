@@ -156,6 +156,5 @@ RUN echo "source /workspaces/mclr/mclr_ws/devel/setup.bash" >> ~/.bashrc
 
 # for drake
 RUN pip install pip --upgrade
-RUN pip install drake
 
-RUN sudo apt install robotpkg-py3\*-ndcurves
+RUN sudo apt install -qqy robotpkg-py3\*-ndcurves

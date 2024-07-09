@@ -68,8 +68,8 @@ class Robot(Body):
             print('joint frictions:       ', self.jointFrictions())
             print('*' * 100 + '\nPyBullet Robot Info ' + '\u2191 '*20 + '\n' + '*' * 100)
 
-        self.enableTorqueControl()
-        # self.enablePositionControl()
+        # self.enableTorqueControl()
+        self.enablePositionControl()
 
         # save the model
         self._model = model

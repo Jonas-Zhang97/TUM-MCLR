@@ -11,7 +11,7 @@ git clone https://github.com/Jonas-Zhang97/TUM-MCLR.git
 If you are familiar with devcontainer, you can skip this steps, direct to this [page](https://github.com/Jonas-Zhang97/TUM-MCLR/tree/master/mclr_ws/src) or this [readme](./mclr_ws/src/Readme.md) to ckeck out the code.
 
 ## Prerequest
- 
+
 - Enable remote development extension in your VSCode (extension ID: ms-vscode-remote.vscode-remote-extensionpack).
 - It is recommended to use the docker container in a computer with NVidia GPU, to start directly with GPU, you can skip to the [get started](#get-started), if not available, follow this [chapter](#build-without-gpu) to build the docker container without GPU
 

@@ -51,7 +51,7 @@ class LIPInterpolator:
     def integrate(self, u):
         #>>>>TODO: integrate with dt
         self.x_dot = self.A @ self.x.reshape(2, 2) + self.B @ u
-        self.x += (self.x_dot * self.dt).reshape(4)
+        self.x += self.x_dot * self.dt
         return self.x
     
     def comState(self):
@@ -107,8 +107,75 @@ class LIPMPC:
         
         #>>>>TODO: build and solve the ocp
         #>>>>Note: start without terminal constraints
+        nx = 4 #>>>>TODO: State dimension = ?
+        nu = 2 #>>>>TODO: control dimension = ?
+        prog = MathematicalProgram()
         
+        state = prog.NewContinuousVariables(self.no_samples, nx, 'state')
+        control = prog.NewContinuousVariables(self.no_samples, nu, 'control')
+        
+        # 1. intial constraint
+        #>>>>TODO: Add inital state constraint, Hint: x_k
+        x_k = x_k.reshape(4, )
+        for i in range(nx):
+            prog.AddConstraint(state[0,i] == x_k[i])
+
+        Ad, Bd = discrete_LIP_dynamics(self.conf.g, self.conf.h, self.dt)
+    
+        # 2. at each time step: respect the LIP descretized dynamics
+        #>>>>TODO: Enforce the dynamics at every time step
+        for i in range(self.no_samples - 1):
+            x_new = Ad @ np.array([[state[i, 0], state[i, 2]], [state[i, 1], state[i, 3]]]) + (Bd @ np.array([control[i]]))
+
+            prog.AddConstraint(state[i + 1, 0] == x_new[0, 0])
+            prog.AddConstraint(state[i + 1, 1] == x_new[1, 0])
+            prog.AddConstraint(state[i + 1, 2] == x_new[0, 1])
+            prog.AddConstraint(state[i + 1, 3] == x_new[1, 1])
+        
+        # 3. at each time step: keep the ZMP within the foot sole (use the footprint and planned step position)
+        #>>>>TODO: Add ZMP upper and lower bound to keep the control (ZMP) within each footprints
+        #Hint: first compute upper and lower bound based on zmp_ref then add constraints.
+        #Hint: Add constraints at every time step
+        for i in range(self.no_samples):
+            x_upper = ZMP_ref_k[i].translation[0] + self.conf.lfxp
+            x_lower = ZMP_ref_k[i].translation[0] - self.conf.lfxn
+            y_upper = ZMP_ref_k[i].translation[1] + self.conf.lfyp
+            y_lower = ZMP_ref_k[i].translation[1] - self.conf.lfxn
+            prog.AddConstraint(control[i, 0] <= x_upper)
+            prog.AddConstraint(control[i, 0] >= x_lower)
+            prog.AddConstraint(control[i, 1] <= y_upper)
+            prog.AddConstraint(control[i, 1] >= y_lower)
+        # 4. if terminal_idx < self.no_samples than we have the terminal state within
+        # the current horizon. In this case create the terminal state (foot step pos + zero vel)
+        # and apply the state constraint to all states >= terminal_idx within the horizon
+        #>>>>TODO: Add the terminal constraint if requires
+        #Hint: If you are unsure, you can start testing without this first!]
+        if terminal_idx < self.no_samples:
+            for i in range(terminal_idx, self.no_samples):
+                prog.AddConstraint(state[i,0] == ZMP_ref_k[-1].translation[0])
+                prog.AddConstraint(state[i,1] == 0)
+                prog.AddConstraint(state[i,2] == ZMP_ref_k[-1].translation[1])
+                prog.AddConstraint(state[i,3] == 0)
+    
+        # setup our cost: minimize zmp error (tracking), minimize CoM velocity (smoothing)
+        #>>>>TODO: add the cost at each timestep, hint: prog.AddCost
+        for i in range(self.no_samples-1):
+            prog.AddCost(self.conf.alpha * ((control[i,0] - ZMP_ref_k[i].translation[0])**2  + (control[i,1] - ZMP_ref_k[i].translation[1])**2) + 
+                         self.conf.gamma * (state[i][1]**2 + state[i][3]**2))
+            
+        # solve
+        result = Solve(prog)
+        if not result.is_success:
+            print("failure")
+            
+        self.X_k = result.GetSolution(state)
+        self.U_k = result.GetSolution(control)
+        if np.isnan(self.X_k).any():
+            print("failure")
+        
+        self.ZMP_ref_k = ZMP_ref_k
         return self.U_k[0]
+    
     
 
 def generate_zmp_reference(foot_steps, no_samples_per_step):
@@ -122,4 +189,4 @@ def generate_zmp_reference(foot_steps, no_samples_per_step):
     for foot_step in foot_steps:
         for _ in range(no_samples_per_step):
             zmp_ref.append(foot_step)
-    return np.array(zmp_ref)
+    return zmp_ref
