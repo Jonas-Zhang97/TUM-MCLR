@@ -9,7 +9,6 @@ import pinocchio as pin
 # simulator
 #>>>>TODO: import simulator
 from pybullet_wrapper import PybulletWrapper
-from tsid_wrapper import TSIDWrapper
 
 # robot configs
 #>>>>TODO: Import talos robot
@@ -69,12 +68,7 @@ def main():
     # Assume the com is over the first support foot
     x0 = plan[0].translation #>>>>TODO: Build the intial mpc state vector
     interpolator = LIPInterpolator(np.array([x0[: 2], [0, 0]]), conf) #>>>>TODO: Create the interpolator and set the inital state
-    init_u_k = np.array([0, 0.086])
-    interpolator.integrate(init_u_k)
-    
-    robot.updateSensor()
     # set the com task over the support foot
-    com_state_init = np.c_[interpolator.comState(), np.array([robot.com_state.pos()[2], 0, 0])] #>>>>TODO: Get the com state
     #>>>>TODO: Set the COM reference to be over supporting foot 
     
     
@@ -85,7 +79,7 @@ def main():
     pre_dur = 3.0   # Time to wait befor walking should start
     sim_freq = 2000 # simulation frequency
     N_pre = int(pre_dur * sim_freq) #>>>>TODO: number of sim steps before walking starts 
-    N_sim = 10 * N_pre#>>>>TODO: total number of sim steps during walking
+    N_sim = 3000#>>>>TODO: total number of sim steps during walking
     N_mpc = N_sim / 50 #>>>>TODO: total number of mpc steps during walking
     
     #>>>>TODO: Create vectors to log all the data of the simulation
@@ -107,6 +101,7 @@ def main():
     t_publish = 0.0                                     # last publish time (last time we published something)
 
     is_init_logged = False  
+    initialized = False
     
     for i in range(-N_pre, N_sim):
         # rint("iteration: ", i)
@@ -153,6 +148,14 @@ def main():
             t_step_elapsed = 0.0
             plan_idx += 1
 
+            if initialized:
+                t_step_elapsed = 0.0
+                curr_support = curr_swing
+                if curr_support == Side.RIGHT:
+                    curr_swing = Side.LEFT
+                else:  
+                    curr_swing = Side.RIGHT
+
             if curr_support == Side.RIGHT:
                 curr_swing_pos = robot.stack.get_placement_LF()
             else:
@@ -167,6 +170,8 @@ def main():
                 curr_swing_pos = robot.stack.get_placement_RF()
             T_swing_w = plan[plan_idx].copy()
             foot_traj = SwingFootTrajectory(curr_swing_pos, T_swing_w, conf.step_dur)
+
+            initialized = True
             
         ########################################################################
         # in every iteration when walking
@@ -185,17 +190,6 @@ def main():
             robot.stack.setComRefState(com_state[0], com_state[1], com_state[2])
             
             t_step_elapsed += dt
-
-            if t_step_elapsed >= conf.step_dur:
-                t_step_elapsed = 0.0
-                curr_support = curr_swing
-                if curr_support == Side.RIGHT:
-                    curr_swing = Side.LEFT
-                else:
-                    curr_swing = Side.RIGHT
-                
-                robot.setSupportFoot(curr_support)
-                robot.setSwingFoot(curr_swing)
 
 
         ########################################################################

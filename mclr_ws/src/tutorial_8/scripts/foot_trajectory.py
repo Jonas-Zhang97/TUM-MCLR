@@ -41,7 +41,7 @@ class SwingFootTrajectory:
                    [(T1.translation[0] - T0.translation[0]) / 2, (T1.translation[2] - T0.translation[1]) / 2, self._height * 2], 
                    T1.translation.tolist()]
         way_pts = np.array(way_pts).T
-        bezier_ref = curves.bezier(way_pts)
+        bezier_ref = curves.bezier(way_pts, 0, self._duration)
         if test:
             numSamples = 10
             fNumSamples = float(numSamples)
@@ -68,10 +68,10 @@ if __name__=="__main__":
     T0 = pin.SE3(np.eye(3), np.array([0, 0, 0]))
     T1 = pin.SE3(np.eye(3), np.array([0.2, 0, 0]))
 
-    sft = SwingFootTrajectory(T0, T1, 1.0)
+    sft = SwingFootTrajectory(T0, T1, 0.8)
 
     #>>>>TODO: plot to make sure everything is correct
-    t = np.linspace(0, 1, 100)
+    t = np.linspace(0, 0.8, 100)
     poses = []
     vels = []
     accs = []

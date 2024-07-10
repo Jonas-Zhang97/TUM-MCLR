@@ -63,4 +63,28 @@ In figure 2 (plots in y-axis), you can notice an obseravable disturbance at 3.2 
 
 ## Tutorial 7: Walking Control
 
-### Task 1: Implement Modules
+### a Task 1: Implement Modules
+
+To check **a.1 Foot Trajectory**, run:
+
+```bash
+python3 src/tutorial_8/scripts/foot_trajectory.py
+```
+
+a 3D plot will be showing as the generated trajectory.
+
+For **a.2 Foot Step planner**, run:
+
+```bash
+python3 src/tutorial_8/scripts/footstep_planner.py
+```
+
+### b Task 2: Implement the Walking Cycle
+
+Becaus I failed to finish the implementation, you can run the code with python command:
+
+```bash
+python3 src/tutorial_8/scripts/walking.py
+```
+
+You will see the robot spawning in the simulator and take a step, then it would fall, The bug is caused by mpc calculation, which has returned a wrong CoM state, I'm still working on it.
