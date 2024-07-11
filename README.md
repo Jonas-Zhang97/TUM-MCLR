@@ -14,7 +14,7 @@ If you are familiar with devcontainer, you can skip this steps, direct to this [
 
 - Enable remote development extension in your VSCode (extension ID: ms-vscode-remote.vscode-remote-extensionpack).
 - It is recommended to use the docker container in a computer with NVidia GPU, to start directly with GPU, you can skip to the [get started](#get-started), if not available, follow this [chapter](#build-without-gpu) to build the docker container without GPU
-- For the [final project](#final-project), a Nvidia GPU is sufficient, and it utilizes functionalities from Isaac Sim, for which, `omniverse-launcher-linux.AppImage` is required, it can be downloaded[here](https://www.nvidia.com/en-us/omniverse/download/), you should download the `.AppImage` version and put it into the `isaac/` folder.
+- For the [final project](#final-project), a Nvidia GPU is sufficient, and the utilizes functionalities from Isaac Sim for reinforcement training and inference, for which, `omniverse-launcher-linux.AppImage` is required, it can be downloaded[here](https://www.nvidia.com/en-us/omniverse/download/), you should download the `.AppImage` version and put it into the `isaac/` folder.
 
 ## Build without GPU
 
