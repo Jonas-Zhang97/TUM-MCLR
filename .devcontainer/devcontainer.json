@@ -35,35 +35,49 @@
 		"--runtime=nvidia",
 		"--network=host",
 		"--privileged",
-		"--gpus=all"
+		"--gpus=all",
+		"-v", "${env:HOME}/.Xauthority:/root/.Xauthority",
+    "-v", "/var/run/dbus:/var/run/dbus"
 	],
-	// "mounts": [
-	// 	{
-	// 		"source": "/dev/dri",
-	// 		"target": "/dev/dri",
-	// 		"type": "bind"
-	// 	},
-	// 	{
-	// 		"source": "/tmp/.X11-unix",
-	// 		"target": "/tmp/.X11-unix",
-	// 		"type": "bind"
-	// 	},
-	// 	{
-	// 		"source": "/etc/machine-id",
-	// 		"target": "/etc/machine-id",
-	// 		"type": "bind"
-	// 	}
-	// 	//{ 
-	// 	//	"source": "/dev", 
-	// 	//	"target": "/dev",
-	// 	//	"type": "bind"
-	// 	//}
-	// 	// ,
-	// 	// { 
-	// 	// 	"source": "/home/${localEnv:USER}/scripts", 
-	// 	// 	"target": "/scripts",
-	// 	// 	"type": "bind"
-	// 	// }
-	// ]
+	"mounts": [
+		{
+			"source": "/dev/dri",
+			"target": "/dev/dri",
+			"type": "bind"
+		},
+		// X11
+		{
+			"source": "/tmp/.X11-unix",
+			"target": "/tmp/.X11-unix",
+			"type": "bind"
+		},
+		{
+			"source": "/etc/machine-id",
+			"target": "/etc/machine-id",
+			"type": "bind"
+		},
+		// Dbus
+		{
+			"source": "/run/dbus",
+			"target": "/run/dbus",
+			"type": "bind"
+		},
+		{
+			"source": "/run/user/1000",
+			"target": "/run/user/1000",
+			"type": "bind"
+		},
+		// { 
+		// 	"source": "/dev", 
+		// 	"target": "/dev",
+		// 	"type": "bind"
+		// }
+		// ,
+		// { 
+		// 	"source": "/home/${localEnv:USER}/scripts", 
+		// 	"target": "/scripts",
+		// 	"type": "bind"
+		// }
+	]
 
 }

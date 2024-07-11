@@ -6,4 +6,4 @@ mclr_ws/src/.vscode
 mclr_ws/.catkin_tools
 ref/
 t7_env/
-mclr_ws/src/isaac
+isaac/omniverse-*

@@ -11,9 +11,23 @@ LABEL MAINTAINER="yueyang.zhang@tum.de"
 SHELL [ "/bin/bash", "-c" ]
 
 # setup environment
-ENV LANG=en_US.UTF-8
-ENV LC_NUMERIC=en_US.UTF-8
+
 ENV LC_ALL=C
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=
+ENV LC_CTYPE=en_US.UTF-8
+ENV LC_NUMERIC=en_US.UTF-8
+ENV LC_TIME=en_US.UTF-8
+ENV LC_COLLATE=en_US.UTF-8
+ENV LC_MONETARY=en_US.UTF-8
+ENV LC_MESSAGES=en_US.UTF-8
+ENV LC_PAPER=en_US.UTF-8
+ENV LC_NAME=en_US.UTF-8
+ENV LC_ADDRESS=en_US.UTF-8
+ENV LC_TELEPHONE=en_US.UTF-8
+ENV LC_MEASUREMENT=en_US.UTF-8
+ENV LC_IDENTIFICATION=en_US.UTF-8
+ENV LC_ALL=
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ROS_DISTRO=noetic
 
@@ -158,3 +172,12 @@ RUN echo "source /workspaces/mclr/mclr_ws/devel/setup.bash" >> ~/.bashrc
 RUN pip install pip --upgrade
 
 RUN sudo apt install -qqy robotpkg-py3\*-ndcurves
+
+# for isaac
+RUN sudo apt-get update
+RUN sudo apt-get install -y -q --no-install-recommends firefox \
+  gnome-terminal \
+  dbus-x11 \
+  dbus \
+  x11-xserver-utils \
+  x11-utils

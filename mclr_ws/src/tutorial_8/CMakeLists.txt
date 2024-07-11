@@ -10,7 +10,6 @@ project(tutorial_8)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
-  simulator
 )
 
 ## System dependencies are found with CMake's conventions

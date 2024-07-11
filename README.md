@@ -14,6 +14,7 @@ If you are familiar with devcontainer, you can skip this steps, direct to this [
 
 - Enable remote development extension in your VSCode (extension ID: ms-vscode-remote.vscode-remote-extensionpack).
 - It is recommended to use the docker container in a computer with NVidia GPU, to start directly with GPU, you can skip to the [get started](#get-started), if not available, follow this [chapter](#build-without-gpu) to build the docker container without GPU
+- For the [final project](#final-project), a Nvidia GPU is sufficient, and it utilizes functionalities from Isaac Sim, for which, `omniverse-launcher-linux.AppImage` is required, it can be downloaded[here](https://www.nvidia.com/en-us/omniverse/download/), you should download the `.AppImage` version and put it into the `isaac/` folder.
 
 ## Build without GPU
 
@@ -38,6 +39,18 @@ then, to the file `.devcontainer/devcontainer.json`, in `runArgs` comment the fo
 Open the local repo in VSCode, you should see a pop-up asking if you want to reopen in devcontainer, click yes. If you don't see any pop-up, press <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd>, type "remote" in searchbar and choose `rebuild and reopen in devcontainer`.
 
 After the container is built, you can then check this [page](https://github.com/Jonas-Zhang97/TUM-MCLR/tree/master/mclr_ws/src) or this [readme](./mclr_ws/src/Readme.md) for the code.
+
+## Final Project
+
+Final project of this course is defined as: *Reinforcement Learning Based Walking Control for Humanoid Robot*.
+
+The project is based on [Talos](https://pal-robotics.com/robots/talos/) from PAL robotics and [Isaac-Sim](https://developer.nvidia.com/isaac/sim) from Nvidia. Configure the Isaac Sim as descriped in [prerequest](#prerequest).
+
+To run Isaac Lab in the container, run with command:
+
+```bash
+dbus-launch ./isaac/omniverse-launcher-linux.AppImage --no-sandbox
+```
 
 ## Issues
 
