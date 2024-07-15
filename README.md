@@ -44,13 +44,25 @@ After the container is built, you can then check this [page](https://github.com/
 
 Final project of this course is defined as: *Reinforcement Learning Based Walking Control for Humanoid Robot*.
 
-The project is based on [Talos](https://pal-robotics.com/robots/talos/) from PAL robotics and [Isaac-Sim](https://developer.nvidia.com/isaac/sim) from Nvidia. Configure the Isaac Sim as descriped in [prerequest](#prerequest).
+The project is based on [Talos](https://pal-robotics.com/robots/talos/) from PAL robotics and [Isaac-Sim](https://developer.nvidia.com/isaac/sim) from Nvidia. Configure the Omniverse app as descriped in [prerequest](#prerequest).
 
-To run Isaac Lab in the container, run with command:
+To run Omniverse app in the container, first change the mode:
+
+```bash
+chmod +x ./isaac/omniverse-launcher-linux.AppImage
+```
+
+then run it in the container with command:
 
 ```bash
 dbus-launch ./isaac/omniverse-launcher-linux.AppImage --no-sandbox
 ```
+
+Intsall `isaac sim 4.0.0` in the omniverse app (the default install entry is a legacy version). Install the `isaac lab` according to the [official documentation](https://isaac-sim.github.io/IsaacLab/source/setup/installation/pip_installation.html#installing-isaac-lab) and follow the tutorial to get a overview of isaac lab.
+
+## TODO
+
+- [ ] Modify this [file](isaac/IsaacLab/source/extensions/omni.isaac.lab/omni/isaac/lab/terrains/config/rough.py) for a new terrain
 
 ## Issues
 

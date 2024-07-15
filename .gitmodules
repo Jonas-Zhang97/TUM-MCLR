@@ -1,3 +1,7 @@
 [submodule "final"]
 	path = final
 	url = git@github.com:ZhangYi1999/RL-based-legged-locomotion.git
+
+[submodule "IsaacLab"]
+  path = isaac/IsaacLab
+  url = git@github.com:isaac-sim/IsaacLab.git
