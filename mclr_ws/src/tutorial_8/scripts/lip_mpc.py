@@ -9,11 +9,10 @@ from pydrake.all import MathematicalProgram, Solve
 def continious_LIP_dynamics(g, h):
     """returns the static matrices A,B of the continious LIP dynamics
     """
-    #>>>> Compute
-    omega = np.sqrt(g / h)
-
-    A =np.array([[0, 1], [omega, 0]])
-    B =np.array([[0, -omega]])
+    # >>>>TODO: Compute
+    w = g / h
+    A = np.array([[0, 1, 0, 0], [w, 0, 0, 0], [0, 0, 0, 1], [0, 0, w, 0]])
+    B = np.array([[0, 0], [-w, 0], [0, 0], [0, -w]])
     return A, B
 
 def discrete_LIP_dynamics(g, h, dt):
@@ -42,7 +41,7 @@ class LIPInterpolator:
         self.conf = conf
         self.dt = conf.dt
         self.x = x_inital
-        self.x_dot = np.array([[0,0],[0,0]])
+        self.x_dot = np.array([0, 0, 0, 0])
         #>>>>TODO: Finish
         self.g = conf.g
         self.h = conf.h
@@ -50,18 +49,17 @@ class LIPInterpolator:
         
     def integrate(self, u):
         #>>>>TODO: integrate with dt
-        self.x_dot = self.A @ self.x.reshape(2, 2) + self.B @ u
-        self.x += self.x_dot * self.dt
+        self.x_dot = self.A @ self.x + self.B @ u
+        self.x += self.dt * self.x_dot
         return self.x
     
     def comState(self):
         #>>>>TODO: return the center of mass state
         # that is position \in R3, velocity \in R3, acceleration \in R3
-        c, c_dot, c_ddot = None, None, None
-        c = self.x[0]
-        c_dot = self.x_dot[0]
-        c_ddot = self.x_dot[1]
-        return [c, c_dot, c_ddot]
+        c = np.array([self.x[0], self.x[2], self.conf.h])
+        c_dot = np.array([self.x[1], self.x[3], 0])
+        c_ddot = np.array([self.x_dot[1], self.x_dot[3], 0])
+        return c, c_dot, c_ddot
     
     def dcm(self):
         #>>>>TODO: return the computed dcm
@@ -116,21 +114,25 @@ class LIPMPC:
         
         # 1. intial constraint
         #>>>>TODO: Add inital state constraint, Hint: x_k
-        x_k = x_k.reshape(4, )
+        # x_k = x_k.reshape(4, )
         for i in range(nx):
-            prog.AddConstraint(state[0,i] == x_k[i])
+            prog.AddConstraint(state[0, i] == x_k[i])
 
         Ad, Bd = discrete_LIP_dynamics(self.conf.g, self.conf.h, self.dt)
     
         # 2. at each time step: respect the LIP descretized dynamics
         #>>>>TODO: Enforce the dynamics at every time step
         for i in range(self.no_samples - 1):
-            x_new = Ad @ np.array([[state[i, 0], state[i, 2]], [state[i, 1], state[i, 3]]]) + (Bd @ np.array([control[i]]))
+            # x_new = Ad @ np.array([[state[i, 0], state[i, 2]], [state[i, 1], state[i, 3]]]) + (Bd @ np.array([control[i]]))
+            for i in range(self.no_samples - 1):  # tbc
 
-            prog.AddConstraint(state[i + 1, 0] == x_new[0, 0])
-            prog.AddConstraint(state[i + 1, 1] == x_new[1, 0])
-            prog.AddConstraint(state[i + 1, 2] == x_new[0, 1])
-            prog.AddConstraint(state[i + 1, 3] == x_new[1, 1])
+                a = Ad @ (state[i].reshape(2, 2).T)
+                b = Bd @ np.array([control[i]])
+                x_next = (a + b).T.reshape(4)
+
+                for j in range(nx):
+                    prog.AddConstraint(state[i + 1, j] == x_next[j])
+
         
         # 3. at each time step: keep the ZMP within the foot sole (use the footprint and planned step position)
         #>>>>TODO: Add ZMP upper and lower bound to keep the control (ZMP) within each footprints
@@ -140,7 +142,7 @@ class LIPMPC:
             x_upper = ZMP_ref_k[i].translation[0] + self.conf.lfxp
             x_lower = ZMP_ref_k[i].translation[0] - self.conf.lfxn
             y_upper = ZMP_ref_k[i].translation[1] + self.conf.lfyp
-            y_lower = ZMP_ref_k[i].translation[1] - self.conf.lfxn
+            y_lower = ZMP_ref_k[i].translation[1] - self.conf.lfyn
             prog.AddConstraint(control[i, 0] <= x_upper)
             prog.AddConstraint(control[i, 0] >= x_lower)
             prog.AddConstraint(control[i, 1] <= y_upper)

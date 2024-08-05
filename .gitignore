@@ -9,3 +9,4 @@ t7_env/
 isaac/omniverse-*
 # this is created by the PyCharm IDE
 .idea/
+tools

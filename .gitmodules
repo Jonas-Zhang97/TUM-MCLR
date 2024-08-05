@@ -5,3 +5,6 @@
 [submodule "IsaacLab"]
   path = isaac/IsaacLab
   url = git@github.com:isaac-sim/IsaacLab.git
+[submodule "legged_robot"]
+	path = legged_robot
+	url = git@github.com:vvyric/legged_robot.git

@@ -45,7 +45,7 @@ class FootStep:
         #>>>>TODO: plot step target position addSphereMarker(...)
         for pose in self.pose:
             simulation.addSphereMarker(pose.translation,radius=0.02)
-            simulation.addGlobalDebugRectancle(pose.translation - np.array([0.02,0,0]),length=0.2, width=0.13)
+            simulation.addGlobalDebugRectancle(pose.translation - np.array([0.0,0,0]),length=0.2, width=0.13)
             if pose.translation[1] >0 :
                 simulation.addUserDebugText(parent_id=-1, link_id=-1, text = 'LEFT', x = pose.translation + np.array([0,0.05,0]))
             else:
@@ -76,7 +76,7 @@ class FootStepPlanner:
         
         # the displacement between steps in x and y direction
         dx = self.conf.step_size_x
-        dy = 2*self.conf.step_size_y
+        dy = 2*0.085
         
         # the footprint of the robot
         lfxp, lfxn = self.conf.lfxp, self.conf.lfxn
@@ -85,6 +85,7 @@ class FootStepPlanner:
         #>>>>TODO: Plan a sequence of steps with T_0_w being the first step pose.
         #>>>>Note: Plan the second step parallel to the first step (robot starts standing on both feet)
         #>>>>Note: Plan the final step parallel to the last-1 step (robot stops standing on both feet)
+        print("initial step: \n", T_0_w.translation)
         steps=[T_0_w]
         if side == Side.LEFT:
             for i in range(0,no_steps):

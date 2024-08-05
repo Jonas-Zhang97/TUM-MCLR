@@ -34,20 +34,22 @@ class Talos:
     def __init__(self, simulator):
         self.conf = conf
         self.sim = simulator
-        
-        #>>>>TODO Like allways create the tsid wrapper
-        self.stack = TSIDWrapper(conf)
-        
+
+        # >>>>TODO: Like allways create the tsid wrapper
+        self.stack = TSIDWrapper(self.conf)
+
         # spawn robot in simulation
-        #>>>>TODO Create the pybullet robot for the simulation
-        self.robot = Robot(simulator,
-                         conf.urdf,
-                         self.stack.model,
-                         basePosition=np.array([0, 0, 1.11]),
-                         baseQuationerion=np.array([0, 0, 0, 1]),
-                         q=conf.q_home,
-                         useFixedBase=False,
-                         verbose=True)
+
+        self.robot = Robot(
+            self.sim,
+            self.conf.urdf,
+            self.stack.model,
+            basePosition=np.array([0, 0, 1.1]),
+            baseQuationerion=np.array([0, 0, 0, 1]),
+            q=self.conf.q_home,
+            useFixedBase=False,
+            verbose=True,
+        )
         
         ########################################################################
         # state
@@ -96,7 +98,6 @@ class Talos:
         dt = self.sim.stepTime()
 
         #>>>> TODO update the pybullet robot
-        self.sim.step()
         
         # update the estimators
         self._update_zmp_estimate()
@@ -313,19 +314,17 @@ class Talos:
 
     def _solve(self, t, dt):
         # get the current state
-        q = self.robot.q()
-        v = self.robot.v()
+        q = self.robot._q
+        v = self.robot._v
 
-        problem = self.stack.formulation.computeProblemData(t, q, v)
-        solution = self.stack.solver.solve(problem)
-        assert solution.status==0, "QP problem could not be solved! Error code: %d" % solution.status
-
-        acc = self.stack.formulation.getAccelerations(solution)
-        q_tsid, v_tsid = self.stack.integrate_dv(conf.q_home, v, acc, dt)
-        self.robot.setActuatedJointPositions(q_tsid, v_tsid)
-        
         # solve the whole body qp
-        #>>>> TODO: sovle the wbc and command the torque to pybullet robot
+        # >>>> TODO: sovle the wbc and command the torque to pybullet robot
+        self.robot.update()
+
+        tau_sol, _ = self.stack.update(q, v, t)
+
+        # command to the robot
+        self.robot.setActuatedJointTorques(tau_sol)
     
     def _update_zmp_estimate(self):
         """update the estimated zmp position
